@@ -1,10 +1,16 @@
 import scipy.io as sio
 import numpy as np
 import sys
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 #import gradients.py
 from gradients import compute_face_phi,dphidx,dphidy,init
-plt.rcParams.update({'font.size': 22})
+plt.rcParams.update({'font.size': 12})
+
+# modify global setting
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+mpl.rcParams['font.family'] = 'Arial'
 
 plt.interactive(True)
 
@@ -242,10 +248,19 @@ v2_2face_w, v2_2face_s = compute_face_phi(v2_2, fx, fy,ni, nj)      #computes fa
 dv2_2dx2 = dphidy(v2_2face_w, v2_2face_s, areawx, areasx, vol)      #RHS 4th term        
 
 
+
+####### Assignment 1.3 - Production Term   #########
+
+
+
+
+
+
+
 ################################ vector plot
 
-fig2 = plt.figure()   #Fig 1
-plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
+plt.figure()   #Fig 1
+# plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
 k=2# plot every forth vector
 ss=1.2 #vector length
 plt.quiver(xp2d[::k,::k],yp2d[::k,::k],u2d[::k,::k],v2d[::k,::k],width=0.001)
@@ -255,8 +270,8 @@ plt.title("vector plot")
 #plt.savefig('vect_python.png')
 
 ################################ contour plot
-fig2 = plt.figure()   #Fig 2 
-plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
+plt.figure()   #Fig 2 
+# plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
 plt.pcolormesh(xp2d,yp2d,dudy, vmin=-5,vmax=5,cmap=plt.get_cmap('hot'),shading='gouraud')
 plt.colorbar()
 plt.xlabel("$x$")
@@ -267,8 +282,8 @@ plt.title(r"the gradient $\partial \bar{v}_1/\partial x_2$")
 
 #************
 # plot uv
-fig2 = plt.figure()   #Fig 3
-plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
+plt.figure()   #Fig 3
+# plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
 i=10
 plt.plot(uv2d[i,:],yp2d[i,:],'b-')
 i = 50
@@ -280,19 +295,23 @@ plt.ylabel('y/H')
 
 ###### plot - reynolds stress
 
-plt.figure()    #Fig 4
+
+plt.figure(figsize=(10,6))    #Fig 4
 i=1
 plt.plot(dtaudx[i,:],yp2d[i,:],'b-')
 i = 10
 plt.plot(dtaudx[i,:], yp2d[i,:],'r-')
+# plt.ylim(0, 0.015)
+# plt.xlim(-0.12, 0)
 plt.xlabel(r'Reynolds Stress  $ (\tau_{ij}) $')
 plt.ylabel('Velocity')
 plt.legend(('$ i = 1 $', '$ i = 10 $'))
 
-### plot - 1.2
+### plot - 1.2                                                                #TODO - Add x and y labels, legend, plot title
+
 plt.figure()    #Fig 5
 i = 35
-plt.plot(dpdx[i,:], yp2d[i,:], 'b-.')
+plt.plot(-dpdx[i,:], yp2d[i,:], 'b-.')
 plt.plot(dv1v1dx[i,:], yp2d[i,:], 'r-.')        #0 gradient
 # plt.plot(dv1v2dy[i,:], yp2d[i,:], 'g-.')      #0 gradeint
 plt.legend(('$\partial p/\partial x$', '$\partial \bar{v}^\prime_1 \bar{v}^\prime_1/\partial x$'))  #TODO
@@ -312,7 +331,7 @@ plt.plot(dv1v2dx[i,:], yp2d[i,:], 'r-.')     #0 gradient
 
 plt.figure()  #Fig 8
 i = 35
-plt.plot(dpdy[i,:], yp2d[i,:], 'k-.')
+plt.plot(-dpdy[i,:], yp2d[i,:], 'k-.')
 plt.plot(dv2dx1_2[i,:], yp2d[i,:], 'r-.')    # 0 gradient
 plt.plot(dv2dx2_2[i,:], yp2d[i,:], 'b-.')  # 0 gradient 
 
@@ -321,7 +340,7 @@ i = 35
 plt.plot(dv2_2dx2[i,:], yp2d[i,:])   # 0 gradient 
 plt.plot(dtaudx[i,:], yp2d[i,:])
 
-# plt.pcolormesh(xp2d, yp2d, dtaudy,  shading='gouraud')
+# plt.contourf(xp2d, yp2d, -dpdy, vmin = -60, vmax = -20, shading='gouraud')
 # plt.colorbar()
 
 plt.show(block = 'True')
