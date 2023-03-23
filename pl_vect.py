@@ -81,8 +81,8 @@ vist_RANS=k_eps_RANS[:,2]
 ntstep=k_RANS[0]
 
 k_RANS2d=np.reshape(k_RANS,(nj,ni))/ntstep
-eps_RANS2d=np.reshape(eps_RANS,(nj,ni))/ntstep
-vist_RANS2d=np.reshape(vist_RANS,(nj,ni))/ntstep
+eps_RANS2d=np.reshape(eps_RANS,(nj,ni))/ntstep        #dissipation term
+vist_RANS2d=np.reshape(vist_RANS,(nj,ni))/ntstep      #turbulent viscosity
 
 # x and y are fo the cell centers. The dphidx_dy routine needs the face coordinate, xf2d, yf2d
 # load them
@@ -188,6 +188,10 @@ for i in range(1, ni-1):
    for j in range(1, nj-1):
       tau[i,j] = rho * uv2d[i,j]
 
+tau2d_face_w, tau2d_face_s = compute_face_phi(tau, fx, fy,ni, nj)
+dtaudx = dphidx(tau2d_face_w, tau2d_face_s, areawy,areasy,vol)
+
+#####   Assignment 1.2 ###### 
 
 
 ################################ vector plot
@@ -227,12 +231,15 @@ plt.ylabel('y/H')
 
 ###### plot - reynolds stress
 plt.figure()
-i=10
-plt.plot(tau[i,:],y2d[i,:-1],'b-')
-i = 50
-plt.plot(tau[i,:], y2d[i,:-1],'r-')
+i=1
+plt.plot(dtaudx[i,:],yp2d[i,:],'b-')
+i = 10
+plt.plot(dtaudx[i,:], yp2d[i,:],'r-')
 plt.xlabel(r'Reynolds Stress  $ (\tau_{ij}) $')
-plt.ylabel('y')
+plt.ylabel('Velocity')
+
+### plot - 1.2
+
 
 plt.show(block = 'True')
 
