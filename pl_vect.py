@@ -1,18 +1,15 @@
 import scipy.io as sio
 import numpy as np
 import sys
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 #import gradients.py
 from gradients import compute_face_phi,dphidx,dphidy,init
-plt.rcParams.update({'font.size': 12})
+from compute_face_phi_D_or_N import compute_face_phi_D_or_N
 import matplotlib.ticker as mtick
 from matplotlib import ticker
 
-# modify global setting
-mpl.rcParams['pdf.fonttype'] = 42
-mpl.rcParams['ps.fonttype'] = 42
-mpl.rcParams['font.family'] = 'Arial'
+plt.rcParams.update({'font.size': 22})
+
 
 plt.interactive(True)
 
@@ -50,11 +47,11 @@ else:
 
 viscos=nu
 
-u2d=np.reshape(u,(nj,ni))
-v2d=np.reshape(v,(nj,ni))
-p2d=np.reshape(p,(nj,ni))
-x2d=np.reshape(x,(nj,ni))
-y2d=np.reshape(y,(nj,ni))
+u2d=np.reshape(u,(nj,ni))   #=mean{v_1}
+v2d=np.reshape(v,(nj,ni))   #=mean{v_2}
+p2d=np.reshape(p,(nj,ni))   #=mean{p}
+x2d=np.reshape(x,(nj,ni))   #=x_1
+y2d=np.reshape(y,(nj,ni))   #=x_2
 uu2d=np.reshape(uu,(nj,ni)) #=mean{v'_1v'_1}
 uv2d=np.reshape(uv,(nj,ni)) #=mean{v'_1v'_2}
 vv2d=np.reshape(vv,(nj,ni)) #=mean{v'_2v'_2}
@@ -88,9 +85,9 @@ vist_RANS=k_eps_RANS[:,2]
 
 ntstep=k_RANS[0]
 
-k_RANS2d=np.reshape(k_RANS,(nj,ni))/ntstep
-eps_RANS2d=np.reshape(eps_RANS,(nj,ni))/ntstep        #dissipation term
-vist_RANS2d=np.reshape(vist_RANS,(nj,ni))/ntstep      #turbulent viscosity
+k_RANS2d=np.reshape(k_RANS,(ni,nj))/ntstep
+eps_RANS2d=np.reshape(eps_RANS,(ni,nj))/ntstep
+vist_RANS2d=np.reshape(vist_RANS,(ni,nj))/ntstep
 
 # x and y are fo the cell centers. The dphidx_dy routine needs the face coordinate, xf2d, yf2d
 # load them
@@ -172,9 +169,9 @@ nj = nj-2
 eps2d[:,-1]=eps2d[:,-2]
 
 # compute face value of U and V
-u2d_face_w,u2d_face_s=compute_face_phi(u2d,fx,fy,ni,nj)
-v2d_face_w,v2d_face_s=compute_face_phi(v2d,fx,fy,ni,nj)
-p2d_face_w,p2d_face_s=compute_face_phi(p2d,fx,fy,ni,nj)
+u2d_face_w,u2d_face_s=compute_face_phi_D_or_N(u2d,fx,fy,ni,nj,'d','d') # the two last argument: Dirichlet = 0  b.c. at south and north 
+v2d_face_w,v2d_face_s=compute_face_phi_D_or_N(v2d,fx,fy,ni,nj,'d','d')
+p2d_face_w,p2d_face_s=compute_face_phi_D_or_N(p2d,fx,fy,ni,nj,'n','n') # the two last argument: Neumann b.c. at south and north 
 
 # x derivatives
 dudx=dphidx(u2d_face_w,u2d_face_s,areawx,areasx,vol)
@@ -188,7 +185,6 @@ dpdy=dphidy(p2d_face_w,p2d_face_s,areawy,areasy,vol)
 
 omega2d=eps2d/k2d/0.09
 
-
 ########  Assignment 1.1 - Reynolds Stresses ##########
 rho = 1
 tau = rho * uv2d
@@ -201,8 +197,8 @@ dtaudy = dphidy(tau2d_face_w, tau2d_face_s, areawy, areasy, vol)
 #####   Assignment 1.2 ######  #TODO y equation
 
 
-                                          #LHS 1st term
-v1v1 = u2d ** 2
+                                          
+v1v1 = u2d ** 2                                                          #LHS 1st term
 v1v1_face_w, v1v1_face_s = compute_face_phi(v1v1, fx, fy,ni, nj)
 duudx = dphidx(v1v1_face_w, v1v1_face_s, areawx, areasx, vol)
  
@@ -250,14 +246,6 @@ dv_2dy = dphidy(v2_2face_w, v2_2face_s, areawy, areasy, vol)      #RHS 4th term
 
 
 ####### Assignment 1.3 - Production Term   #########
-v1_2[i,j] = u2d[i,j]**2 
-v2_2[i,j] = v2d[i,j]**2
-u1_2 = np.zeros([ni,nj])
-u1_2[i,j] = u2d[i,j]*v2d[i,j] 
-u2_1 = np.zeros([ni,nj])
-u1_2[i,j] = v2d[i,j]*u2d[i,j] 
-p_k = np.zeros([ni,nj])
-p_k[i,j] = (-v1_2[i,j]*dv1dx1[i,j]) +  (-v2_2[i,j]*dv2dx2[i,j]) + (-u1_2[i,j]*dv1dx2[i,j]) + (-u2_1[i,j]*dv2dx1[i,j])
 
 
 # v1_2[i,j] = u2d[i,j]**2 
@@ -322,6 +310,7 @@ i = 35
 plt.plot(uv2d[i,:], yp2d[i,:],'r-')
 plt.xlabel('$\overline{u^\prime v^\prime}$')
 plt.ylabel('y/H')
+
 #plt.savefig('uv_python.png')
 
 
@@ -344,29 +333,29 @@ plt.legend(('$ i = 1 $', '$ i = 10 $'))
 plt.figure()    #Fig 5
 i = 35
 plt.plot(-dpdx[i,:], yp2d[i,:], 'b-.')
-# plt.plot(dv1v1dx[i,:], yp2d[i,:], 'r-.')        #0 gradient
-# plt.plot(dv1v2dy[i,:], yp2d[i,:], 'g-.')      #0 gradeint
+# plt.plot(dv1v1dx[i,:], yp2d[i,:], 'r-.')        
+# plt.plot(dv1v2dy[i,:], yp2d[i,:], 'g-.')      
 plt.legend(('$\partial p/\partial x$', '$\partial \bar{v}^\prime_1 \bar{v}^\prime_1/\partial x$'))  #TODO
 
 plt.figure()   #Fig 6
 i = 35
 plt.plot(dudx_2[i,:], yp2d[i,:], 'y-.')
 plt.plot(dudy_2[i,:], yp2d[i,:], 'k-.')
-plt.plot(du_2dx[i,:], yp2d[i,:], 'r-.')     #0 gradient
+plt.plot(du_2dx[i,:], yp2d[i,:], 'r-.')     
 plt.plot(dtaudy[i,:], yp2d[i,:], 'g-.')        
 
 
 plt.figure()  #Fig 7
 i = 35
-plt.plot(dv1v2dx[i,:], yp2d[i,:], 'r-.')     #0 gradient 
-# plt.plot(dv2v2dy[i,:], yp2d[i,:], 'b-.')   #0 gradient
+plt.plot(dv1v2dx[i,:], yp2d[i,:], 'r-.')      
+# plt.plot(dv2v2dy[i,:], yp2d[i,:], 'b-.')   
 
 plt.figure()  #Fig 8
 i = 35
 plt.plot(-dpdy[i,:], yp2d[i,:], 'k-.')
-plt.plot(dvdx_2[i,:], yp2d[i,:], 'r-.')    # 0 gradient
-plt.plot(dvdy_2[i,:], yp2d[i,:], 'b-.')  # 0 gradient 
-plt.plot(v1v2[i,:], yp2d[i,:])   # 0 gradient 
+plt.plot(dvdx_2[i,:], yp2d[i,:], 'r-.')    
+plt.plot(dvdy_2[i,:], yp2d[i,:], 'b-.')   
+plt.plot(v1v2[i,:], yp2d[i,:])    
 
 # plt.figure()    #Fig 9
 # i = 35
@@ -378,12 +367,12 @@ plt.plot(v1v2[i,:], yp2d[i,:])   # 0 gradient
 
 ### 1.3 
 
-normal_pk = np.zeros([ni,nj])
-shear_pk = np.zeros([ni,nj])
+# normal_pk = np.zeros([ni,nj])
+# shear_pk = np.zeros([ni,nj])
 normal_pk = pk1 +pk2
 shear_pk = pk3+pk4
 
-plt.figure(11)    #Fig 10
+plt.figure()    #Fig 10
 i=35
 plt.plot(normal_pk[i,:],yp2d[i,:],'b-')
 plt.plot(shear_pk[i,:], yp2d[i,:],'r-')
@@ -393,18 +382,31 @@ plt.xlabel('Production term  $ (P_K) $')
 plt.ylabel('Y')
 plt.legend(('$ Normal $', '$ Shear $'))
 
-plt.show(block = 'True')
+
 #1.3 Plot
-plt.figure(figsize=(10,6))    #Fig 10
-i=1
+plt.figure(figsize=(10,6))    #Fig 11
+i=10
 plt.plot(p_k[i,:],yp2d[i,:],'b-')
-i = 10
+i = 50
 plt.plot(p_k[i,:], yp2d[i,:],'r-')
+# i = 150
+# plt.plot(p_k[i,:], yp2d[i,:],'g-')
+plt.ylim(0, 0.1)
 # plt.ylim(0, 0.015)
 # plt.xlim(-0.12, 0)
 plt.xlabel('Production term  $ (P_K) $')
 plt.ylabel('Y')
-plt.legend(('$ i = 1 $', '$ i = 10 $'))
+plt.legend(('$ i = 10 $', '$ i = 50 $','$ i = 150 $'))
+
+
+###   1.4 Plot
+
+plt.figure()
+i = 35
+# plt.plot(p_k[i,:],yp2d[i,:],'b-')
+plt.plot(eps_RANS2d[i,:], yp2d[i,:], 'r-.')
+plt.plot(eps2d[i,:], yp2d[i,:], 'b-')
+
 plt.show(block = 'True')
 
 
