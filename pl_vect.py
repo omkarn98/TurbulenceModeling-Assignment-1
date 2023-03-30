@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 #import gradients.py
 from gradients import compute_face_phi,dphidx,dphidy,init
 plt.rcParams.update({'font.size': 12})
+import matplotlib.ticker as mtick
+from matplotlib import ticker
 
 # modify global setting
 mpl.rcParams['pdf.fonttype'] = 42
@@ -179,80 +181,101 @@ dudx=dphidx(u2d_face_w,u2d_face_s,areawx,areasx,vol)
 dvdx=dphidx(v2d_face_w,v2d_face_s,areawx,areasx,vol)
 dpdx=dphidx(p2d_face_w,p2d_face_s,areawx,areasx,vol)
 
-# x derivatives
-dudy=dphidx(u2d_face_w,u2d_face_s,areawy,areasy,vol)
-dvdy=dphidx(v2d_face_w,v2d_face_s,areawy,areasy,vol)
-dpdy=dphidx(p2d_face_w,p2d_face_s,areawy,areasy,vol)
+# y derivatives
+dudy=dphidy(u2d_face_w,u2d_face_s,areawy,areasy,vol)
+dvdy=dphidy(v2d_face_w,v2d_face_s,areawy,areasy,vol)
+dpdy=dphidy(p2d_face_w,p2d_face_s,areawy,areasy,vol)
 
 omega2d=eps2d/k2d/0.09
 
-tau = np.zeros([ni,nj])
 
 ########  Assignment 1.1 - Reynolds Stresses ##########
 rho = 1
-for i in range(1, ni-1):
-   for j in range(1, nj-1):
-      tau[i,j] = rho * uv2d[i,j]
+tau = rho * uv2d
 
 tau2d_face_w, tau2d_face_s = compute_face_phi(tau, fx, fy,ni, nj)
-dtaudx = dphidx(tau2d_face_w, tau2d_face_s, areawy, areasy, vol)
+dtaudx = dphidx(tau2d_face_w, tau2d_face_s, areawx, areasx, vol)
+dtaudy = dphidy(tau2d_face_w, tau2d_face_s, areawy, areasy, vol)
+
 
 #####   Assignment 1.2 ######  #TODO y equation
 
 
-v1v1 = np.zeros([ni, nj])                                           #LHS 1st term
-v1v1[i,j] = u2d[i,j] * u2d[i,j]
+                                          #LHS 1st term
+v1v1 = u2d ** 2
 v1v1_face_w, v1v1_face_s = compute_face_phi(v1v1, fx, fy,ni, nj)
-dv1v1dx = dphidx(v1v1_face_w, v1v1_face_s, areawy, areasy, vol)
+duudx = dphidx(v1v1_face_w, v1v1_face_s, areawx, areasx, vol)
+ 
+# duudx = 2 * u2d * dudx                                                #LHS 1st term - chain rule
 
-v1v2 = np.zeros([ni, nj])                                           #LHS 2nd term
-v1v2[i,j] = u2d[i,j] * v2d[i,j]
+                                         
+v1v2 = u2d * v2d                       #LHS 2nd term without chain rule
 v1v2_face_w, v1v2_face_s = compute_face_phi(v1v2, fx, fy,ni, nj)
-dv1v2dy = dphidy(v1v1_face_w, v1v1_face_s, areawx, areasx, vol)
+duvdy = dphidy(v1v1_face_w, v1v1_face_s, areawy, areasy, vol)
 
-dv1dx1 = dphidx(u2d_face_w, u2d_face_s, areawy, areasy, vol)
-dv1dx1_face_w, dv1dx1_face_s = compute_face_phi(dv1dx1, fx, fy,ni, nj)
-dv1dx1_2 = nu * dphidx(dv1dx1_face_w, dv1dx1_face_s, areawy, areasy, vol)    #RHS 2nd term  (R1 eq)
-
-dv1dx2 = dphidy(u2d_face_w, u2d_face_s, areawx, areasx, vol)
-dv1dx2_face_w, dv1dx2_face_s = compute_face_phi(dv1dx2, fx, fy,ni, nj)
-dv1dx2_2 = nu * dphidy(dv1dx2_face_w, dv1dx2_face_s, areawx, areasx, vol)    #RHS 3rd term 
-
-v1_2 = np.zeros([ni,nj])
-v1_2[i,j] = u2d[i,j]**2    #(v1')^2 ~ (u')^2
-v1_2face_w, v1_2face_s = compute_face_phi(v1_2, fx, fy,ni, nj)      #computes face value of (v1')^2
-dv1_2dx1 = dphidx(v1_2face_w, v1_2face_s, areawy, areasy, vol)      #RHS 4th term        
+# duvdy_chain = (u2d * dvdy) + (v2d * dudy)                                #LHS 2nd term with chain rule
 
 
-dtaudy = dphidy(tau2d_face_w, tau2d_face_s, areawx, areasx, vol)
+dudx_face_w, dudx_face_s = compute_face_phi(dudx, fx, fy,ni, nj)
+dudx_2 = nu * dphidx(dudx_face_w, dudx_face_s, areawx, areasx, vol)    #RHS 2nd term  (R1 eq)
 
-###
+dudy_face_w, dudy_face_s = compute_face_phi(dudy, fx, fy,ni, nj)
+dudy_2 = nu * dphidy(dudy_face_w, dudy_face_s, areawy, areasy, vol)    #RHS 3rd term 
 
-dv1v2dx = dphidx(v1v1_face_w, v1v1_face_s, areawy, areasy, vol)
-v2v2 = np.zeros([ni, nj])                                           #LHS 1st term
-v2v2[i,j] = v2d[i,j] * v2d[i,j]
+u_2 = u2d**2    #(v1')^2 ~ (u')^2
+u_2face_w, u_2face_s = compute_face_phi(u_2, fx, fy,ni, nj)      #computes face value of (v1')^2
+du_2dx = dphidx(u_2face_w, u_2face_s, areawx, areasx, vol)       #RHS 4th term        
+
+
+# ###
+
+dv1v2dx = dphidx(v1v1_face_w, v1v1_face_s, areawx, areasx, vol)                                 
+v2v2 = v2d * v2d                                                     #LHS 1st term
 v2v2_face_w, v2v2_face_s = compute_face_phi(v2v2, fx, fy,ni, nj)
-dv2v2dy = dphidy(v2v2_face_w, v2v2_face_s, areawx, areasx, vol)
+dvvdy = dphidy(v2v2_face_w, v2v2_face_s, areawy, areasy, vol)
 
 dv2dx1 = dphidx(v2d_face_w, v2d_face_s, areawy, areasy, vol)
 dv2dx1_face_w, dv2dx1_face_s = compute_face_phi(dv2dx1, fx, fy,ni, nj)
-dv2dx1_2 = nu * dphidx(dv2dx1_face_w, dv2dx1_face_s, areawy, areasy, vol)
+dvdx_2 = nu * dphidx(dv2dx1_face_w, dv2dx1_face_s, areawx, areasx, vol)
 
-dv2dx2 = dphidy(v2d_face_w, v2d_face_s, areawx, areasx, vol)
+dv2dx2 = dphidy(v2d_face_w, v2d_face_s, areawy, areasy, vol)
 dv2dx2_face_w, dv2dx2_face_s = compute_face_phi(dv2dx2, fx, fy,ni, nj)
-dv2dx2_2 = nu * dphidy(dv2dx2_face_w, dv2dx2_face_s, areawx, areasx, vol)
+dvdy_2 = nu * dphidy(dv2dx2_face_w, dv2dx2_face_s, areawy, areasy, vol)
 
-v2_2 = np.zeros([ni,nj])
-v2_2[i,j] = v2d[i,j]**2    #(v1')^2 ~ (u')^2
+
+v2_2 = v2d**2    #(v1')^2 ~ (u')^2
 v2_2face_w, v2_2face_s = compute_face_phi(v2_2, fx, fy,ni, nj)      #computes face value of (v1')^2
-dv2_2dx2 = dphidy(v2_2face_w, v2_2face_s, areawx, areasx, vol)      #RHS 4th term        
+dv_2dy = dphidy(v2_2face_w, v2_2face_s, areawy, areasy, vol)      #RHS 4th term        
 
 
 
 ####### Assignment 1.3 - Production Term   #########
 
+# v1_2[i,j] = u2d[i,j]**2 
+# v2_2[i,j] = v2d[i,j]**2
+# u1_2 = np.zeros([ni,nj])
+# u1_2[i,j] = u2d[i,j]*v2d[i,j] 
+# u2_1 = np.zeros([ni,nj])
+# u1_2[i,j] = v2d[i,j]*u2d[i,j] 
+# p_k = np.zeros([ni,nj])
+# p_k[i,j] = (-v1_2[i,j]*dv1dx1[i,j]) +  (-v2_2[i,j]*dv2dx2[i,j]) + (-u1_2[i,j]*dv1dx2[i,j]) + (-u2_1[i,j]*dv2dx1[i,j])
 
-
+v1_2 = u2d**2
+v2_2 = v2d**2
+# u1_2 = np.zeros([ni,nj])
+u1_2 = u2d*v2d
+# u2_1 = np.zeros([ni,nj])
+u2_1 = v2d*u2d
+p_k = np.zeros([ni,nj])
+p_k = (-v1_2*dudx) +  (-v2_2*dvdy) + (-u1_2*dudy) + (-u2_1*dvdx)
+pk1 = np.zeros([ni,nj])
+pk2 = np.zeros([ni,nj])
+pk3 = np.zeros([ni,nj])
+pk4 = np.zeros([ni,nj])
+pk1= -v1_2*dudx
+pk2= -v2_2*dv2dx2
+pk3= -u1_2*dudy
+pk4= -u2_1*dvdx
 
 
 
@@ -284,9 +307,9 @@ plt.title(r"the gradient $\partial \bar{v}_1/\partial x_2$")
 # plot uv
 plt.figure()   #Fig 3
 # plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
-i=10
+i=1
 plt.plot(uv2d[i,:],yp2d[i,:],'b-')
-i = 50
+i = 35
 plt.plot(uv2d[i,:], yp2d[i,:],'r-')
 plt.xlabel('$\overline{u^\prime v^\prime}$')
 plt.ylabel('y/H')
@@ -299,7 +322,7 @@ plt.ylabel('y/H')
 plt.figure(figsize=(10,6))    #Fig 4
 i=1
 plt.plot(dtaudx[i,:],yp2d[i,:],'b-')
-i = 10
+i = 35
 plt.plot(dtaudx[i,:], yp2d[i,:],'r-')
 # plt.ylim(0, 0.015)
 # plt.xlim(-0.12, 0)
@@ -307,20 +330,20 @@ plt.xlabel(r'Reynolds Stress  $ (\tau_{ij}) $')
 plt.ylabel('Velocity')
 plt.legend(('$ i = 1 $', '$ i = 10 $'))
 
-### plot - 1.2                                                                #TODO - Add x and y labels, legend, plot title
+### plot - 1.2                                          #TODO - Add x and y labels, legend, plot title
 
 plt.figure()    #Fig 5
 i = 35
 plt.plot(-dpdx[i,:], yp2d[i,:], 'b-.')
-plt.plot(dv1v1dx[i,:], yp2d[i,:], 'r-.')        #0 gradient
+# plt.plot(dv1v1dx[i,:], yp2d[i,:], 'r-.')        #0 gradient
 # plt.plot(dv1v2dy[i,:], yp2d[i,:], 'g-.')      #0 gradeint
 plt.legend(('$\partial p/\partial x$', '$\partial \bar{v}^\prime_1 \bar{v}^\prime_1/\partial x$'))  #TODO
 
 plt.figure()   #Fig 6
 i = 35
-plt.plot(dv1dx1_2[i,:], yp2d[i,:], 'y-.')
-plt.plot(dv1dx2_2[i,:], yp2d[i,:], 'k-.')
-plt.plot(dv1_2dx1[i,:], yp2d[i,:], 'r-.')     #0 gradient
+plt.plot(dudx_2[i,:], yp2d[i,:], 'y-.')
+plt.plot(dudy_2[i,:], yp2d[i,:], 'k-.')
+plt.plot(du_2dx[i,:], yp2d[i,:], 'r-.')     #0 gradient
 plt.plot(dtaudy[i,:], yp2d[i,:], 'g-.')        
 
 
@@ -332,16 +355,34 @@ plt.plot(dv1v2dx[i,:], yp2d[i,:], 'r-.')     #0 gradient
 plt.figure()  #Fig 8
 i = 35
 plt.plot(-dpdy[i,:], yp2d[i,:], 'k-.')
-plt.plot(dv2dx1_2[i,:], yp2d[i,:], 'r-.')    # 0 gradient
-plt.plot(dv2dx2_2[i,:], yp2d[i,:], 'b-.')  # 0 gradient 
+plt.plot(dvdx_2[i,:], yp2d[i,:], 'r-.')    # 0 gradient
+plt.plot(dvdy_2[i,:], yp2d[i,:], 'b-.')  # 0 gradient 
+plt.plot(v1v2[i,:], yp2d[i,:])   # 0 gradient 
 
-plt.figure()    #Fig 9
-i = 35
-plt.plot(dv2_2dx2[i,:], yp2d[i,:])   # 0 gradient 
-plt.plot(dtaudx[i,:], yp2d[i,:])
+# plt.figure()    #Fig 9
+# i = 35
+
 
 # plt.contourf(xp2d, yp2d, -dpdy, vmin = -60, vmax = -20, shading='gouraud')
 # plt.colorbar()
+
+
+### 1.3 
+
+normal_pk = np.zeros([ni,nj])
+shear_pk = np.zeros([ni,nj])
+normal_pk = pk1 +pk2
+shear_pk = pk3+pk4
+
+plt.figure(11)    #Fig 10
+i=35
+plt.plot(normal_pk[i,:],yp2d[i,:],'b-')
+plt.plot(shear_pk[i,:], yp2d[i,:],'r-')
+# plt.ylim(0, 0.015)
+# plt.xlim(-0.12, 0)
+plt.xlabel('Production term  $ (P_K) $')
+plt.ylabel('Y')
+plt.legend(('$ Normal $', '$ Shear $'))
 
 plt.show(block = 'True')
 
