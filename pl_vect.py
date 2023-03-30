@@ -250,6 +250,15 @@ dv_2dy = dphidy(v2_2face_w, v2_2face_s, areawy, areasy, vol)      #RHS 4th term
 
 
 ####### Assignment 1.3 - Production Term   #########
+v1_2[i,j] = u2d[i,j]**2 
+v2_2[i,j] = v2d[i,j]**2
+u1_2 = np.zeros([ni,nj])
+u1_2[i,j] = u2d[i,j]*v2d[i,j] 
+u2_1 = np.zeros([ni,nj])
+u1_2[i,j] = v2d[i,j]*u2d[i,j] 
+p_k = np.zeros([ni,nj])
+p_k[i,j] = (-v1_2[i,j]*dv1dx1[i,j]) +  (-v2_2[i,j]*dv2dx2[i,j]) + (-u1_2[i,j]*dv1dx2[i,j]) + (-u2_1[i,j]*dv2dx1[i,j])
+
 
 # v1_2[i,j] = u2d[i,j]**2 
 # v2_2[i,j] = v2d[i,j]**2
@@ -384,6 +393,18 @@ plt.xlabel('Production term  $ (P_K) $')
 plt.ylabel('Y')
 plt.legend(('$ Normal $', '$ Shear $'))
 
+plt.show(block = 'True')
+#1.3 Plot
+plt.figure(figsize=(10,6))    #Fig 10
+i=1
+plt.plot(p_k[i,:],yp2d[i,:],'b-')
+i = 10
+plt.plot(p_k[i,:], yp2d[i,:],'r-')
+# plt.ylim(0, 0.015)
+# plt.xlim(-0.12, 0)
+plt.xlabel('Production term  $ (P_K) $')
+plt.ylabel('Y')
+plt.legend(('$ i = 1 $', '$ i = 10 $'))
 plt.show(block = 'True')
 
 
