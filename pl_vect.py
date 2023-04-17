@@ -1,6 +1,7 @@
 import scipy.io as sio
 import numpy as np
 import sys
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 #import gradients.py
 from gradients import compute_face_phi,dphidx,dphidy,init
@@ -8,7 +9,12 @@ from compute_face_phi_D_or_N import compute_face_phi_D_or_N
 import matplotlib.ticker as mtick
 from matplotlib import ticker
 
-plt.rcParams.update({'font.size': 22})
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+mpl.rcParams['font.family'] = 'Arial'
+
+
+# plt.rcParams.update({'font.size': 22})
 
 
 plt.interactive(True)
@@ -230,8 +236,7 @@ v2v2 = v2d * v2d                                                     #LHS 1st te
 v2v2_face_w, v2v2_face_s = compute_face_phi(v2v2, fx, fy,ni, nj)
 dvvdy = dphidy(v2v2_face_w, v2v2_face_s, areawy, areasy, vol)
 
-dv2dx1 = dphidx(v2d_face_w, v2d_face_s, areawy, areasy, vol)
-dv2dx1_face_w, dv2dx1_face_s = compute_face_phi(dv2dx1, fx, fy,ni, nj)
+dv2dx1_face_w, dv2dx1_face_s = compute_face_phi(dvdx, fx, fy,ni, nj)
 dvdx_2 = nu * dphidx(dv2dx1_face_w, dv2dx1_face_s, areawx, areasx, vol)
 
 dv2dx2 = dphidy(v2d_face_w, v2d_face_s, areawy, areasy, vol)
@@ -259,23 +264,35 @@ dv_2dy = dphidy(v2_2face_w, v2_2face_s, areawy, areasy, vol)      #RHS 4th term
 
 v1_2 = u2d**2
 v2_2 = v2d**2
-# u1_2 = np.zeros([ni,nj])
 u1_2 = u2d*v2d
-# u2_1 = np.zeros([ni,nj])
 u2_1 = v2d*u2d
-p_k = np.zeros([ni,nj])
 p_k = (-v1_2*dudx) +  (-v2_2*dvdy) + (-u1_2*dudy) + (-u2_1*dvdx)
-pk1 = np.zeros([ni,nj])
-pk2 = np.zeros([ni,nj])
-pk3 = np.zeros([ni,nj])
-pk4 = np.zeros([ni,nj])
 pk1= -v1_2*dudx
 pk2= -v2_2*dv2dx2
 pk3= -u1_2*dudy
 pk4= -u2_1*dvdx
 
 
+#### Assignment 1.5 ###
+c_mu = 0.09
 
+
+
+#### Assignment 1.6 - Reynolds stresses using Boussinseq Assumption 
+
+visc_t = c_mu * k_RANS2d**2 / eps_RANS2d
+
+reystress_11 = -2*visc_t*dudx + 2/3*k_RANS2d
+reystress_22 = -2*visc_t*dvdy + 2/3*k_RANS2d
+reystress_12 = -2*visc_t*0.5*(dudy + dvdx)    # s_ij is symmetric, thus reystress_12 = reystress_21
+
+production_k12 = 2*visc_t* 0.5*(dudy + dvdx)*0.5*(dudy + dvdx)
+production_k11 = 2*visc_t*dudx*dudx
+production_k22 = 2*visc_t*dvdy*dvdy
+
+production_k_total = production_k11 + production_k12 + production_k22 + production_k12
+print(np.min(production_k_total))
+print(np.max(p_k))
 
 ################################ vector plot
 
@@ -317,7 +334,7 @@ plt.ylabel('y/H')
 ###### plot - reynolds stress
 
 
-plt.figure(figsize=(10,6))    #Fig 4
+# plt.figure(figsize=(10,6))    #Fig 4
 i=1
 plt.plot(dtaudx[i,:],yp2d[i,:],'b-')
 i = 35
@@ -325,19 +342,19 @@ plt.plot(dtaudx[i,:], yp2d[i,:],'r-')
 # plt.ylim(0, 0.015)
 # plt.xlim(-0.12, 0)
 plt.xlabel(r'Reynolds Stress  $ (\tau_{ij}) $')
-plt.ylabel('Velocity')
-plt.legend(('$ i = 1 $', '$ i = 10 $'))
+plt.ylabel('y')
+plt.legend(('i = 1', 'i = 10'))
 
-### plot - 1.2                                          #TODO - Add x and y labels, legend, plot title
+# ### plot - 1.2                                          #TODO - Add x and y labels, legend, plot title
 
-plt.figure()    #Fig 5
+# plt.figure()    #Fig 5
 i = 35
 plt.plot(-dpdx[i,:], yp2d[i,:], 'b-.')
-# plt.plot(dv1v1dx[i,:], yp2d[i,:], 'r-.')        
-# plt.plot(dv1v2dy[i,:], yp2d[i,:], 'g-.')      
+plt.plot(duudx[i,:], yp2d[i,:], 'r-.')        
+plt.plot(duvdy[i,:], yp2d[i,:], 'g-.')      
 plt.legend(('$\partial p/\partial x$', '$\partial \bar{v}^\prime_1 \bar{v}^\prime_1/\partial x$'))  #TODO
 
-plt.figure()   #Fig 6
+# plt.figure()   #Fig 6
 i = 35
 plt.plot(dudx_2[i,:], yp2d[i,:], 'y-.')
 plt.plot(dudy_2[i,:], yp2d[i,:], 'k-.')
@@ -345,19 +362,19 @@ plt.plot(du_2dx[i,:], yp2d[i,:], 'r-.')
 plt.plot(dtaudy[i,:], yp2d[i,:], 'g-.')        
 
 
-plt.figure()  #Fig 7
+# plt.figure()  #Fig 7
 i = 35
 plt.plot(dv1v2dx[i,:], yp2d[i,:], 'r-.')      
 # plt.plot(dv2v2dy[i,:], yp2d[i,:], 'b-.')   
 
-plt.figure()  #Fig 8
+# plt.figure()  #Fig 8
 i = 35
 plt.plot(-dpdy[i,:], yp2d[i,:], 'k-.')
 plt.plot(dvdx_2[i,:], yp2d[i,:], 'r-.')    
 plt.plot(dvdy_2[i,:], yp2d[i,:], 'b-.')   
 plt.plot(v1v2[i,:], yp2d[i,:])    
 
-# plt.figure()    #Fig 9
+# # plt.figure()    #Fig 9
 # i = 35
 
 
@@ -365,25 +382,25 @@ plt.plot(v1v2[i,:], yp2d[i,:])
 # plt.colorbar()
 
 
-### 1.3 
+# ### 1.3 
 
-# normal_pk = np.zeros([ni,nj])
-# shear_pk = np.zeros([ni,nj])
-normal_pk = pk1 +pk2
-shear_pk = pk3+pk4
+# # normal_pk = np.zeros([ni,nj])
+# # shear_pk = np.zeros([ni,nj])
+# normal_pk = pk1 +pk2
+# shear_pk = pk3+pk4
 
-plt.figure()    #Fig 10
-i=35
-plt.plot(normal_pk[i,:],yp2d[i,:],'b-')
-plt.plot(shear_pk[i,:], yp2d[i,:],'r-')
+# plt.figure()    #Fig 10
+# i=35
+# plt.plot(normal_pk[i,:],yp2d[i,:],'b-')
+# plt.plot(shear_pk[i,:], yp2d[i,:],'r-')
 # plt.ylim(0, 0.015)
 # plt.xlim(-0.12, 0)
-plt.xlabel('Production term  $ (P_K) $')
-plt.ylabel('Y')
-plt.legend(('$ Normal $', '$ Shear $'))
+# plt.xlabel('Production term  $ (P_K) $')
+# plt.ylabel('Y')
+# plt.legend(('$ Normal $', '$ Shear $'))
 
 
-#1.3 Plot
+# #1.3 Plot
 plt.figure(figsize=(10,6))    #Fig 11
 i=10
 plt.plot(p_k[i,:],yp2d[i,:],'b-')
@@ -399,13 +416,55 @@ plt.ylabel('Y')
 plt.legend(('$ i = 10 $', '$ i = 50 $','$ i = 150 $'))
 
 
-###   1.4 Plot
+# ###   1.4 Plot
 
 plt.figure()
 i = 35
-# plt.plot(p_k[i,:],yp2d[i,:],'b-')
+plt.plot(p_k[i,:],yp2d[i,:],'b-')
 plt.plot(eps_RANS2d[i,:], yp2d[i,:], 'r-.')
-plt.plot(eps2d[i,:], yp2d[i,:], 'b-')
+
+# 1.6 plots ##
+
+plt.figure()   #Fig                 
+# plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
+i = 50
+plt.plot(uv2d[i,:], yp2d[i,:])
+plt.plot(reystress_12[i,:-1], yp2d[i,:-1])
+plt.xlabel('Reynolds Stress $')
+plt.ylabel('Y')
+# plt.ylim(0,0.2)
+# plt.title(r"the gradient $\partial \bar{v}_1/\partial x_2$")
+
+plt.figure()   #Fig                 
+# plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
+i = 35
+plt.plot(uu2d[i,:], yp2d[i,:])
+plt.plot(reystress_11[i,:-1], yp2d[i,:-1])
+plt.xlabel('Reynolds Stress $')
+plt.ylabel('Y')
+plt.legend(('u1u1_prime', 'u1u1_prime calculated'))
+
+plt.figure()
+i = 52
+plt.plot(pk1[i,:], yp2d[i,:])
+plt.plot(pk2[i,:], yp2d[i,:])
+plt.plot(pk3[i,:], yp2d[i,:])
+plt.plot(pk4[i,:], yp2d[i,:])
+plt.xlabel('Individual Production terms$')
+plt.ylabel('Y')
+plt.legend(('pk_1', 'pk_2', 'pk_3', 'pk_4'))
+plt.xlim(-0.05, 0.05)
+
+
+# plot 1.7 
+
+plt.figure()  
+plt.pcolormesh(xp2d,yp2d,p_k, vmin=-0.2,vmax=0.2,cmap=plt.get_cmap('hot'),shading='gouraud')
+plt.colorbar()
+plt.xlabel("$x$")
+plt.ylabel("$y$")
+plt.title("Production Term")
+
 
 plt.show(block = 'True')
 
