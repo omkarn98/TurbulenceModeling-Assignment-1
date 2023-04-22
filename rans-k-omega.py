@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from tdma import tdma
+# from tdma import tdma
 #from IPython import display
 plt.rcParams.update({'font.size': 22})
 

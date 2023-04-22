@@ -224,8 +224,8 @@ dudx_2 = nu * dphidx(dudx_face_w, dudx_face_s, areawx, areasx, vol)    #RHS 2nd 
 dudy_face_w, dudy_face_s = compute_face_phi(dudy, fx, fy,ni, nj)
 dudy_2 = nu * dphidy(dudy_face_w, dudy_face_s, areawy, areasy, vol)    #RHS 3rd term 
 
-u_2 = u2d**2    #(v1')^2 ~ (u')^2
-u_2face_w, u_2face_s = compute_face_phi(u_2, fx, fy,ni, nj)      #computes face value of (v1')^2
+uu_2 = uu2d**2    #(v1')^2 ~ (u')^2
+u_2face_w, u_2face_s = compute_face_phi(uu_2, fx, fy,ni, nj)      #computes face value of (v1')^2
 du_2dx = dphidx(u_2face_w, u_2face_s, areawx, areasx, vol)       #RHS 4th term        
 
 
@@ -244,8 +244,8 @@ dv2dx2_face_w, dv2dx2_face_s = compute_face_phi(dv2dx2, fx, fy,ni, nj)
 dvdy_2 = nu * dphidy(dv2dx2_face_w, dv2dx2_face_s, areawy, areasy, vol)
 
 
-v2_2 = v2d**2    #(v1')^2 ~ (u')^2
-v2_2face_w, v2_2face_s = compute_face_phi(v2_2, fx, fy,ni, nj)      #computes face value of (v1')^2
+vv_2 = vv2d**2    #(v1')^2 ~ (u')^2
+v2_2face_w, v2_2face_s = compute_face_phi(vv_2, fx, fy,ni, nj)      #computes face value of (v1')^2
 dv_2dy = dphidy(v2_2face_w, v2_2face_s, areawy, areasy, vol)      #RHS 4th term        
 
 
@@ -262,12 +262,12 @@ dv_2dy = dphidy(v2_2face_w, v2_2face_s, areawy, areasy, vol)      #RHS 4th term
 # p_k = np.zeros([ni,nj])
 # p_k[i,j] = (-v1_2[i,j]*dv1dx1[i,j]) +  (-v2_2[i,j]*dv2dx2[i,j]) + (-u1_2[i,j]*dv1dx2[i,j]) + (-u2_1[i,j]*dv2dx1[i,j])
 
-v1_2 = u2d**2
+v1_1 = u2d**2
 v2_2 = v2d**2
 u1_2 = u2d*v2d
 u2_1 = v2d*u2d
-p_k = (-v1_2*dudx) +  (-v2_2*dvdy) + (-u1_2*dudy) + (-u2_1*dvdx)
-pk1= -v1_2*dudx
+p_k = (-v1_1*dudx) +  (-v2_2*dvdy) + (-u1_2*dudy) + (-u2_1*dvdx)
+pk1= -v1_1*dudx
 pk2= -v2_2*dv2dx2
 pk3= -u1_2*dudy
 pk4= -u2_1*dvdx
@@ -327,6 +327,7 @@ i = 35
 plt.plot(uv2d[i,:], yp2d[i,:],'r-')
 plt.xlabel('$\overline{u^\prime v^\prime}$')
 plt.ylabel('y/H')
+plt.legend(('i = 1', 'i = 35'))
 
 #plt.savefig('uv_python.png')
 
@@ -334,7 +335,7 @@ plt.ylabel('y/H')
 ###### plot - reynolds stress
 
 
-# plt.figure(figsize=(10,6))    #Fig 4
+plt.figure()     #Fig 4
 i=1
 plt.plot(dtaudx[i,:],yp2d[i,:],'b-')
 i = 35
@@ -343,117 +344,116 @@ plt.plot(dtaudx[i,:], yp2d[i,:],'r-')
 # plt.xlim(-0.12, 0)
 plt.xlabel(r'Reynolds Stress  $ (\tau_{ij}) $')
 plt.ylabel('y')
-plt.legend(('i = 1', 'i = 10'))
+plt.legend(('i = 1', 'i = 35'))
 
 # ### plot - 1.2                                          #TODO - Add x and y labels, legend, plot title
 
-# plt.figure()    #Fig 5
+plt.figure()    #Fig 5
+i = 10
+# 
+plt.plot(duudx[i,:], yp2d[i,:], 'b--')        
+plt.plot(duvdy[i,:], yp2d[i,:], 'r--')      
+plt.legend(( r'$\partial \bar{u}^\prime_1 \bar{u}^\prime_1/\partial x$', r'$\partial \bar{u}^\prime_1 \bar{v}^\prime_1/\partial x$'))
+# plt.xlabel(r'Reynolds Stress  $ (\tau_{ij}) $')
+plt.ylabel('y')
+plt.ylim(0,0.15)
+# 
+
+plt.figure()   #Fig 6
 i = 35
 plt.plot(-dpdx[i,:], yp2d[i,:], 'b-.')
-plt.plot(duudx[i,:], yp2d[i,:], 'r-.')        
-plt.plot(duvdy[i,:], yp2d[i,:], 'g-.')      
-plt.legend(('$\partial p/\partial x$', '$\partial \bar{v}^\prime_1 \bar{v}^\prime_1/\partial x$'))  #TODO
-
-# plt.figure()   #Fig 6
-i = 35
 plt.plot(dudx_2[i,:], yp2d[i,:], 'y-.')
 plt.plot(dudy_2[i,:], yp2d[i,:], 'k-.')
 plt.plot(du_2dx[i,:], yp2d[i,:], 'r-.')     
-plt.plot(dtaudy[i,:], yp2d[i,:], 'g-.')        
+plt.plot(-dtaudy[i,:], yp2d[i,:], 'g-.') 
+plt.legend((r'$\partial \bar{p}/\partial x$', r'$\partial \bar{u}^{\prime 2}_1 /\partial x$', r'$\overline{u^\prime v^\prime}/\partial y$', r'$\mu \partial^2 \bar{u}_1/\partial x^2$', r'$\mu \partial^2 \bar{u}_1/\partial y^2$'))
+plt.ylabel('y')
+# plt.ylim(-0.15, 0.15)
 
 
-# plt.figure()  #Fig 7
+plt.figure()  #Fig 7
 i = 35
 plt.plot(dv1v2dx[i,:], yp2d[i,:], 'r-.')      
-# plt.plot(dv2v2dy[i,:], yp2d[i,:], 'b-.')   
+plt.plot(dvvdy[i,:], yp2d[i,:], 'b-.') 
+plt.ylabel('y')
+plt.legend((r'$\partial{\bar{v}_1\bar{v}_2}/\partial x_1 $', r'$\partial{\bar{v}_2 \bar{v}_2}/\partial{x}_2$'))  
 
-# plt.figure()  #Fig 8
+plt.figure()  #Fig 8
 i = 35
 plt.plot(-dpdy[i,:], yp2d[i,:], 'k-.')
 plt.plot(dvdx_2[i,:], yp2d[i,:], 'r-.')    
 plt.plot(dvdy_2[i,:], yp2d[i,:], 'b-.')   
-plt.plot(v1v2[i,:], yp2d[i,:])    
+plt.plot(dv_2dy[i,:], yp2d[i,:], 'g-.')  
+plt.plot(dtaudx[i,:], yp2d[i,:], 'm-.')  
+plt.legend((r'$-\partial \bar{p}/\partial y $', r'$\mu \partial^2 \bar{u}_2/\partial x^2$', r'$\mu \partial^2 \bar{u}_2/\partial y^2$',r'$\partial \overline{{{v}^\prime}^2}/\partial y$', r'$\partial \overline{u^\prime v^\prime}/\partial x$'))
+plt.ylabel('y')
 
+ 
 # # plt.figure()    #Fig 9
 # i = 35
-
-
 # plt.contourf(xp2d, yp2d, -dpdy, vmin = -60, vmax = -20, shading='gouraud')
 # plt.colorbar()
 
-
-# ### 1.3 
-
-# # normal_pk = np.zeros([ni,nj])
-# # shear_pk = np.zeros([ni,nj])
-# normal_pk = pk1 +pk2
-# shear_pk = pk3+pk4
-
-# plt.figure()    #Fig 10
-# i=35
-# plt.plot(normal_pk[i,:],yp2d[i,:],'b-')
-# plt.plot(shear_pk[i,:], yp2d[i,:],'r-')
-# plt.ylim(0, 0.015)
-# plt.xlim(-0.12, 0)
-# plt.xlabel('Production term  $ (P_K) $')
-# plt.ylabel('Y')
-# plt.legend(('$ Normal $', '$ Shear $'))
-
-
 # #1.3 Plot
-plt.figure(figsize=(10,6))    #Fig 11
+plt.figure()    #Fig 9
 i=10
-plt.plot(p_k[i,:],yp2d[i,:],'b-')
-i = 50
-plt.plot(p_k[i,:], yp2d[i,:],'r-')
-# i = 150
-# plt.plot(p_k[i,:], yp2d[i,:],'g-')
-plt.ylim(0, 0.1)
-# plt.ylim(0, 0.015)
-# plt.xlim(-0.12, 0)
-plt.xlabel('Production term  $ (P_K) $')
+plt.plot(p_k[i,:],yp2d[i,:],'b-.')
+i = 35
+plt.plot(p_k[i,:], yp2d[i,:],'r-.')
+# plt.ylim(0, 0.1)
+plt.xlabel('Production term  $ (P^k) $')
 plt.ylabel('Y')
-plt.legend(('$ i = 10 $', '$ i = 50 $','$ i = 150 $'))
+plt.legend(('i = 10 ', ' i = 50 '))
+
+plt.figure()   #Fig 10
+i = 35
+plt.plot(pk1[i,:], yp2d[i,:], 'r-.')
+plt.plot(pk2[i,:], yp2d[i,:], 'b-.')
+plt.plot(pk3[i,:], yp2d[i,:], 'k-.')
+plt.plot(pk4[i,:], yp2d[i,:], 'g-.')
+plt.ylabel('y/H')
+plt.xlabel('Production Term')
+plt.legend((r'$P^k_{11}$', r'$P^k_{22}$', r'$P^k_{12}$', r'$P^k_{21}$'))
 
 
 # ###   1.4 Plot
-
-plt.figure()
+plt.figure()    #Fig 11
 i = 35
-plt.plot(p_k[i,:],yp2d[i,:],'b-')
+plt.plot(p_k[i,:],yp2d[i,:],'b-.')
 plt.plot(eps_RANS2d[i,:], yp2d[i,:], 'r-.')
+plt.ylabel('y/H')
+plt.legend((r'Production Term $(P^k)$', r'Dissipation $(\epsilon)$'))
 
 # 1.6 plots ##
 
-plt.figure()   #Fig                 
+plt.figure()   #Fig    12             
 # plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
 i = 50
-plt.plot(uv2d[i,:], yp2d[i,:])
-plt.plot(reystress_12[i,:-1], yp2d[i,:-1])
-plt.xlabel('Reynolds Stress $')
-plt.ylabel('Y')
-# plt.ylim(0,0.2)
-# plt.title(r"the gradient $\partial \bar{v}_1/\partial x_2$")
+plt.plot(uv2d[i,:], yp2d[i,:], 'b-.')
+plt.plot(reystress_12[i,:-1], yp2d[i,:-1], 'r-.')
+plt.xlabel(r'Reynolds Stress $\overline{u^\prime v^\prime}$ at i=50')
+plt.ylabel('y/H')
+plt.legend((r'$\overline{u^\prime v^\prime}$ - database', r'$\overline{u^\prime v^\prime}$ - calculated'))
 
-plt.figure()   #Fig                 
-# plt.subplots_adjust(left=0.20,top=0.80,bottom=0.20)
-i = 35
-plt.plot(uu2d[i,:], yp2d[i,:])
-plt.plot(reystress_11[i,:-1], yp2d[i,:-1])
-plt.xlabel('Reynolds Stress $')
-plt.ylabel('Y')
-plt.legend(('u1u1_prime', 'u1u1_prime calculated'))
 
-plt.figure()
-i = 52
-plt.plot(pk1[i,:], yp2d[i,:])
-plt.plot(pk2[i,:], yp2d[i,:])
-plt.plot(pk3[i,:], yp2d[i,:])
-plt.plot(pk4[i,:], yp2d[i,:])
-plt.xlabel('Individual Production terms$')
-plt.ylabel('Y')
-plt.legend(('pk_1', 'pk_2', 'pk_3', 'pk_4'))
-plt.xlim(-0.05, 0.05)
+plt.figure()   #Fig    13             
+i = 50
+plt.plot(uu2d[i,:], yp2d[i,:], 'b-.')
+plt.plot(reystress_11[i,:-1], yp2d[i,:-1], 'r-.')
+plt.xlabel(r'Reynolds Stress $\overline{u^\prime u^\prime}$ at i=50')
+plt.ylabel('y/H')
+plt.legend((r'$\overline{u^\prime u^\prime}$ - database', r'$\overline{u^\prime u^\prime}$ - calculated'))
+
+# plt.figure()
+# i = 52
+# plt.plot(pk1[i,:], yp2d[i,:])
+# plt.plot(pk2[i,:], yp2d[i,:])
+# plt.plot(pk3[i,:], yp2d[i,:])
+# plt.plot(pk4[i,:], yp2d[i,:])
+# plt.xlabel('Individual Production terms$')
+# plt.ylabel('Y')
+# plt.legend(('pk_1', 'pk_2', 'pk_3', 'pk_4'))
+# plt.xlim(-0.05, 0.05)
 
 
 # plot 1.7 
