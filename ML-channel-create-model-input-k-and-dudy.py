@@ -84,7 +84,7 @@ n_svr=len(cmu_all_data)-n_test
 # pick 20% elements randomly (test data)
 index_test=np.random.choice(index, size=n_test, replace=False)
 # pick every 5th elements 
-#index_test=index[::5]
+# index_test=index[::5]
 dudy_test=dudy_all_data[index_test]
 k_test=k_all_data[index_test]
 yplus_DNS_test=yplus_DNS_all_data[index_test]
@@ -155,7 +155,7 @@ plt.ylabel(r"$\overline{u'v'}$")
 plt.xlabel("$y^+$")
 plt.legend(loc="best",fontsize=18)
 plt.axis([0, 5200, -1, 0])
-plt.savefig('uv_DNS.png',bbox_inches='tight')
+# plt.savefig('uv_DNS.png',bbox_inches='tight')
 
 
 # Set Increments between points in a meshgrid
@@ -208,7 +208,7 @@ clb=plt.colorbar(ax_plot,cax=cbaxes,orientation='horizontal')
 clb.ax.tick_params(labelsize=11)
 clb.ax.set_title(r'$C_\mu$',fontsize=11)
 
-plt.savefig('2D-scatter-dudy-and-k-vs-uv-svr-and-test.png',bbox_inches='tight')
+# plt.savefig('2D-scatter-dudy-and-k-vs-uv-svr-and-test.png',bbox_inches='tight')
 
 ########################################## Cmu 
 fig1,ax1 = plt.subplots()
@@ -219,6 +219,9 @@ plt.legend(loc="best",fontsize=18)
 plt.ylabel(r"$C_\mu$")
 plt.xlabel("$y^+$")
 plt.axis([100, 2000, 0.6, 1.1])
-plt.savefig('cmu.png',bbox_inches='tight')
+plt.show(block = 'True')
+
+
+# plt.savefig('cmu.png',bbox_inches='tight')
 
 

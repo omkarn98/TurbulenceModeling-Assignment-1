@@ -60,6 +60,12 @@ cmu_all_data=cmu_DNS
 # input dudy
 dudy_all_data=dudy_DNS
 
+# choose values for 30 < y+ < 1000
+#index_choose=np.nonzero((yplus_DNS > 30 )  & (yplus_DNS< 1000 ))
+#yplus_DNS=yplus_DNS[index_choose]
+#dudy_all_data= dudy_all_data[index_choose]
+#cmu_all_data= cmu_all_data[index_choose]
+#  ....... do this for all varibles
 
 # create indices for all data
 index= np.arange(0,len(cmu_all_data), dtype=int)
@@ -130,7 +136,7 @@ ax=plt.gca()
 
 # plot all points
 plt.scatter(scaler_dudy.inverse_transform(dudy_test), cmu_out_test,marker='o', s=20.2,c='green',label='target')
-plt.scatter(scaler_dudy.inverse_transform(dudy_test), cmu_predict,marker='o', s=20.2,c='blue',label='predicted')
+#plt.scatter(scaler_dudy.inverse_transform(dudy_test), cmu_predict,marker='o', s=20.2,c='blue',label='predicted')
 
 #label axes
 ax.set_ylabel(r'$C_\mu$')
