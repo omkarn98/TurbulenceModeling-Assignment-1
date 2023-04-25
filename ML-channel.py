@@ -36,7 +36,7 @@ eps_DNS[0]=eps_DNS[1]
 vist_DNS=abs(uv_DNS)/dudy_DNS
 
 # load data from k-omega RANS
-data = np.loadtxt('y_u_k_om_uv_5200-RANS-code.txt')
+data = np.loadtxt('y_u_k_om_uv_5200-RANS-code.dat')
 y_rans = data[:,0]
 k_rans = data[:,2]
 # interpolate to DNS grid
@@ -61,11 +61,15 @@ cmu_all_data=cmu_DNS
 dudy_all_data=dudy_DNS
 
 # choose values for 30 < y+ < 1000
-#index_choose=np.nonzero((yplus_DNS > 30 )  & (yplus_DNS< 1000 ))
-#yplus_DNS=yplus_DNS[index_choose]
-#dudy_all_data= dudy_all_data[index_choose]
-#cmu_all_data= cmu_all_data[index_choose]
-#  ....... do this for all varibles
+index_choose=np.nonzero((yplus_DNS > 30 )  & (yplus_DNS< 1000 ))
+yplus_DNS=yplus_DNS[index_choose]
+dudy_all_data= dudy_all_data[index_choose]
+cmu_all_data= cmu_all_data[index_choose]
+#   ....... do this for all varibles
+
+# find min & max
+# dudy_min = np.min(dudy_DNS)
+# dudy_max = np.max(dudy_DNS)
 
 # create indices for all data
 index= np.arange(0,len(cmu_all_data), dtype=int)
@@ -74,9 +78,9 @@ index= np.arange(0,len(cmu_all_data), dtype=int)
 n_test=int(0.2*len(cmu_all_data))
 
 # pick 20% elements randomly (test data)
-index_test=np.random.choice(index, size=n_test, replace=False)
+# index_test=np.random.choice(index, size=n_test, replace=False)
 # pick every 5th elements 
-#index_test=index[::5]
+index_test=index[::5]
 
 dudy_test=dudy_all_data[index_test]
 cmu_out_test=cmu_all_data[index_test]
@@ -156,7 +160,11 @@ axins1.xaxis.tick_bottom()
 plt.ylabel("$C_\mu$")
 plt.xlabel("$\partial U^+/\partial y$")
 plt.axis([0, 100, 0.4,1])
+plt.show(block = 'True')
 
 
-plt.savefig('scatter-cmu-vs-dudy-svr-and-test.png',bbox_inches='tight')
+dump(model, 'model-svr.bin')
+dump(scaler_dudy, 'scalar-dudy-svr.bin')
+np.savetxt('min-max-svr.txt', [dudy_max, dudy_min])
+# plt.savefig('scatter-cmu-vs-dudy-svr-and-test.png',bbox_inches='tight')
 

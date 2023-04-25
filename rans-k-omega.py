@@ -3,6 +3,10 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVR
+from joblib import dump, load
+
 # from tdma import tdma
 #from IPython import display
 plt.rcParams.update({'font.size': 22})
@@ -20,6 +24,13 @@ plt.close('all')
 #
 # Discretization described in detail in
 # http://www.tfd.chalmers.se/~lada/comp_fluid_dynamics/
+
+# folder = 'D:\Chalmers - Academic Files\SP4\Turbulence Modeling\TurbulenceModeling-Assignment-1\TurbulenceModeling-Assignment-1'
+folder = './'
+filename = str(folder)+'model-svr.bin'
+model = load(str(folder)+'model-svr.bin')
+scaler_dudy = load(str(folder)+'scalar-dudy-svr.bin')
+# dudy_max, dudy_min = np.loadtxt(str(folder)+ 'min-max-svr.txt')
 
 # max number of iterations
 niter=25000
@@ -292,7 +303,7 @@ plt.plot(u_DNS,y_DNS,'r-',label="DNS")
 plt.ylabel("$U^+$")
 plt.xlabel("$y^+$")
 plt.legend(loc="best",prop=dict(size=18))
-plt.savefig('u_5200.png')
+# plt.savefig('u_5200.png')
 
 # plot u log-scale
 fig1,ax1 = plt.subplots()
@@ -306,7 +317,7 @@ plt.ylabel("$U^+$")
 plt.xlabel("$y^+$")
 plt.axis([1, 5200, 0, 28])
 plt.legend(loc="best",prop=dict(size=18))
-plt.savefig('u_log-5200.png')
+# plt.savefig('u_log-5200.png')
 
 # plot k
 fig1,ax1 = plt.subplots()
@@ -316,7 +327,7 @@ plt.plot(k_DNS,y_DNS,'r-',label="DNS")
 plt.legend(loc="best",prop=dict(size=18))
 plt.xlabel('k')
 plt.ylabel('y')
-plt.savefig('k_5200.png')
+# plt.savefig('k_5200.png')
 
 # plot tau_w versus iteration number
 fig1,ax1 = plt.subplots()
@@ -326,7 +337,7 @@ plt.plot(tau_w[0:ntot],'b-')
 plt.title('wall shear stress')
 plt.xlabel('Iteration number')
 plt.ylabel('tauw')
-plt.savefig('tauw.png')
+# plt.savefig('tauw.png')
 
 # plot k(jmon) versus iteration number
 fig1,ax1 = plt.subplots()
@@ -336,7 +347,7 @@ plt.plot(k_iter[0:ntot],'b-')
 plt.title('k in node jmon')
 plt.xlabel('Iteration number')
 plt.ylabel('k')
-plt.savefig('k_iter.png')
+# plt.savefig('k_iter.png')
 
 # plot om(jmon) versus iteration number
 fig1,ax1 = plt.subplots()
@@ -346,7 +357,7 @@ plt.plot(om_iter[0:ntot],'b-')
 plt.title('omega in node jmon')
 plt.xlabel('Iteration number')
 plt.ylabel('omega')
-plt.savefig('om_iter.png')
+# plt.savefig('om_iter.png')
 
 # save data
 data=np.zeros((nj,7))
@@ -359,3 +370,5 @@ data[:,5]=uv
 data[:,6]=yc
 np.savetxt('yp_u_k_om_vist_uv_yc_PDH_5200.dat', data)
 
+
+plt.show(block = 'True')
