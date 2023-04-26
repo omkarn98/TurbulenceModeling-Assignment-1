@@ -178,6 +178,10 @@ eps2d[:,-1]=eps2d[:,-2]
 u2d_face_w,u2d_face_s=compute_face_phi_D_or_N(u2d,fx,fy,ni,nj,'d','d') # the two last argument: Dirichlet = 0  b.c. at south and north 
 v2d_face_w,v2d_face_s=compute_face_phi_D_or_N(v2d,fx,fy,ni,nj,'d','d')
 p2d_face_w,p2d_face_s=compute_face_phi_D_or_N(p2d,fx,fy,ni,nj,'n','n') # the two last argument: Neumann b.c. at south and north 
+uu2d_face_w, uu2d_face_s = compute_face_phi(uu2d, fx, fy, ni, nj)
+vv2d_face_w, vv2d_face_s = compute_face_phi(vv2d, fx, fy, ni, nj)
+uv2d_face_w, uv2d_face_s = compute_face_phi(uv2d, fx, fy, ni, nj)
+
 
 # x derivatives
 dudx=dphidx(u2d_face_w,u2d_face_s,areawx,areasx,vol)
@@ -275,8 +279,65 @@ pk4= -u2_1*dvdx
 
 #### Assignment 1.5 ###
 c_mu = 0.09
+c1 = 1.5
+c2 = 0.6
+c1_w = 0.5
+c2_w = 0.3
+sigmak = 1
+rho = 1
+
+#production
+P_11 = -2 * ((uu2d * dudx) + (uv2d * dudy))
+P_22 = -2 * ((vv2d * dvdy) + (uv2d * dvdx))
+P_12 = -(uu2d * dvdx) -(uv2d * dudx) -(uv2d * dvdy) -(vv2d * dudy)
+
+#viscous terms
+
+duudx = dphidx(uu2d_face_w, uu2d_face_s, areawx, areasx, vol)
+duudx_face_w, duudx_face_s = compute_face_phi(duudx, fx, fy, ni, nj)
+duudx_2 = dphidx(duudx_face_w, duudx_face_s, areawx, areasx, vol)
+
+duudy = dphidy(uu2d_face_w, uu2d_face_s, areawy, areasy, vol)
+duudy_face_w, duudy_face_s = compute_face_phi(duudy, fx, fy, ni, nj)
+duudy_2 = dphidy(duudy_face_w, duudy_face_s, areawy, areasy, vol)
+
+dvvdx = dphidx(vv2d_face_w, vv2d_face_s, areawx, areasx, vol)
+dvvdx_face_w, dvvdx_face_s = compute_face_phi(dvvdx, fx, fy, ni, nj)
+dvvdx_2 = dphidx(dvvdx_face_w, dvvdx_face_s, areawx, areasx, vol)
 
 
+dvvdy = dphidy(vv2d_face_w, vv2d_face_s, areawy, areasy, vol)
+dvvdy_face_w, dvvdy_face_s = compute_face_phi(dvvdy, fx, fy, ni, nj)
+dvvdy_2 = dphidy(dvvdy_face_w, dvvdy_face_s, areawy, areasy, vol)
+
+
+duvdx = dphidx(uv2d_face_w, uv2d_face_s, areawx, areasx, vol)
+duvdx_face_w, duvdx_face_s = compute_face_phi(duvdx, fx, fy, ni, nj)
+duvdx_2 = dphidx(duvdx_face_w, duvdx_face_s, areawx, areasx, vol)
+
+
+duvdy = dphidy(uv2d_face_w, uv2d_face_s, areawy, areasy, vol)
+duvdy_face_w, duvdy_face_s = compute_face_phi(duvdy, fx, fy, ni, nj)
+duvdy_2 = dphidy(duvdy_face_w, duvdy_face_s, areawy, areasy, vol)
+
+Vt_11 = nu * (duudx_2 + duudy_2)
+Vt_22 = nu * (dvvdx_2 + dvvdy_2)
+Vt_12 = nu * (duvdx_2 + duvdy_2)
+
+#Pressure-strain terms
+phi_11_1 = -c1 * rho * (eps_RANS2d / k_RANS2d) * 
+
+#Dissipation term 
+eps_11 = 2*eps_RANS2d / 3
+#eps_12 = 0 because kornicker delta is 0
+
+#Diffusion term
+vist = c_mu * k_RANS2d**2 / eps_RANS2d
+vist_face_w, vist_face_s = compute_face_phi(vist, fx, fy, ni, nj)
+dvistdx = dphidx(vist_face_w, vist_face_s, areawx, areasx, vol)
+dvistdy = dphidy(vist_face_w, vist_face_s, areawy, areasy, vol)
+D11 = vist * (duudx_2 + duudy_2) + ((duudx + duudy) * (dvistdx + dvistdy)) / sigmak
+D12 = vist * (duvdx_2 + duvdy_2) + ((duvdx + duvdy) * (dvistdx + dvistdy)) / sigmak
 
 #### Assignment 1.6 - Reynolds stresses using Boussinseq Assumption 
 
