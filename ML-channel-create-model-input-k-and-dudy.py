@@ -56,63 +56,79 @@ omega_DNS=omega_DNS[index]
 uv_DNS=uv_DNS[index]
 cmu_DNS=cmu_DNS[index]
 k_DNS=k_DNS[index]
+vist_DNS = vist_DNS[index]
 
 # find min & max
 dudy_min = np.min(dudy_DNS)
 dudy_max = np.max(dudy_DNS)
 
-k_min = np.min(k_DNS)
-k_max = np.max(k_DNS)
+# k_min = np.min(k_DNS)
+# k_max = np.max(k_DNS)
 
+vist_min = np.min(vist_DNS)
+vist_max = np.max(vist_DNS)
 
-cmu_all_data=cmu_DNS
+# cmu_all_data=cmu_DNS
+uv_all_data=uv_DNS
 yplus_DNS_all_data=yplus_DNS
 # input dudy
 dudy_all_data=dudy_DNS
-# input dudy
-k_all_data=k_DNS
+
+# input k
+# k_all_data=k_DNS
+
+# input vist
+vist_all_data=vist_DNS
 
 # create new indices for all data (which goes from 0 to len(uv_all_data)
-index= np.arange(0,len(cmu_all_data), dtype=int)
+index= np.arange(0,len(uv_all_data), dtype=int)
 
 # number of elements of test data, 20%
-n_test=int(0.2*len(cmu_all_data))
+n_test=int(0.2*len(uv_all_data))
 
 # the rest is for training data
-n_svr=len(cmu_all_data)-n_test
+n_svr=len(uv_all_data)-n_test
 
 # pick 20% elements randomly (test data)
 index_test=np.random.choice(index, size=n_test, replace=False)
 # pick every 5th elements 
 # index_test=index[::5]
 dudy_test=dudy_all_data[index_test]
-k_test=k_all_data[index_test]
+# k_test=k_all_data[index_test]
+vist_test=vist_all_data[index_test]
 yplus_DNS_test=yplus_DNS_all_data[index_test]
-cmu_test=cmu_all_data[index_test]
+# cmu_test=cmu_all_data[index_test]
+uv_test=uv_all_data[index_test]
 n_test=len(dudy_test)
 print('n_test',n_test)
 
 # delete testing data from 'all data' => training data
 dudy_in=np.delete(dudy_all_data,index_test)
-k_in=np.delete(k_all_data,index_test)
-cmu_out=np.delete(cmu_all_data,index_test)
-n_svr=len(cmu_out)
+# k_in=np.delete(k_all_data,index_test)
+vist_in=np.delete(vist_all_data,index_test)
+
+# cmu_out=np.delete(cmu_all_data,index_test)
+uv_out=np.delete(uv_all_data,index_test)
+n_svr=len(uv_out)
 
 # re-shape
 dudy_in=dudy_in.reshape(-1, 1)
-k_in=k_in.reshape(-1, 1)
+# k_in=k_in.reshape(-1, 1)
+vist_in=vist_in.reshape(-1, 1)
 
 # scale input data 
 scaler_dudy=StandardScaler()
-scaler_k=StandardScaler()
+scaler_vist=StandardScaler()
 dudy_in=scaler_dudy.fit_transform(dudy_in)
-k_in=scaler_k.fit_transform(k_in)
+# k_in=scaler_k.fit_transform(k_in)
+vist_in=scaler_vist.fit_transform(vist_in)
 
 # setup X (input) and y (output)
 X=np.zeros((n_svr,2))
-y=cmu_out
+# y=cmu_out
+y = uv_out
 X[:,0]=dudy_in[:,0]
-X[:,1]=k_in[:,0]
+X[:,1]=vist_in[:,0]
 
 print('starting SVR')
 
@@ -127,25 +143,32 @@ svr = model.fit(X, y.flatten())
 
 #  re-shape test data
 dudy_test=dudy_test.reshape(-1, 1)
-k_test=k_test.reshape(-1, 1)
+# k_test=k_test.reshape(-1, 1)
+vist_test=vist_test.reshape(-1, 1)
 
 # scale test data
 dudy_test=scaler_dudy.transform(dudy_test)
-k_test=scaler_k.transform(k_test)
+# k_test=scaler_k.transform(k_test)
+vist_test=scaler_vist.transform(vist_test)
+
 
 # setup X (input) for testing (predicting)
 X_test=np.zeros((n_test,2))
 X_test[:,0]=dudy_test[:,0]
-X_test[:,1]=k_test[:,0]
+X_test[:,1]=vist_test[:,0]
 
 # predict uv
-cmu_predict= model.predict(X_test)
+# cmu_predict= model.predict(X_test)
+uv_predict= model.predict(X_test)
 
 # find difference between ML prediction and target
-cmu_error=np.std(cmu_predict-cmu_test)/\
-(np.mean(cmu_predict**2))**0.5
-print('\nRMS error using ML turbulence model',cmu_error)
+# cmu_error=np.std(cmu_predict-cmu_test)/\
+# (np.mean(cmu_predict**2))**0.5
+# print('\nRMS error using ML turbulence model',cmu_error)
 
+uv_error=np.std(uv_predict-uv_test)/\
+(np.mean(uv_predict**2))**0.5
+print('\nRMS error using ML turbulence model',uv_error)
 ########################################## uv 
 fig1,ax1 = plt.subplots()
 plt.subplots_adjust(left=0.25,bottom=0.20)
@@ -174,12 +197,19 @@ yrange = np.arange(y_min, y_max, mesh_size)
 xx, yy= np.meshgrid(xrange, yrange)
 
 # Use model to create a prediction plane --- SVR
-cmu_predict_xx_yy = model.predict(np.c_[xx.ravel(), yy.ravel()])
-cmu_predict_xx_yy = cmu_predict_xx_yy.reshape(xx.shape)
+# cmu_predict_xx_yy = model.predict(np.c_[xx.ravel(), yy.ravel()])
+# cmu_predict_xx_yy = cmu_predict_xx_yy.reshape(xx.shape)
+
+uv_predict_xx_yy = model.predict(np.c_[xx.ravel(), yy.ravel()])
+uv_predict_xx_yy = uv_predict_xx_yy.reshape(xx.shape)
+
 
 # transform back to physical values (non-scaled)
+# xx_no_scale=scaler_dudy.inverse_transform(xx)
+# yy_no_scale=scaler_k.inverse_transform(yy)
+
 xx_no_scale=scaler_dudy.inverse_transform(xx)
-yy_no_scale=scaler_k.inverse_transform(yy)
+yy_no_scale=scaler_vist.inverse_transform(yy)
 
 ####################################### cmu  2D scatter
 fig1,ax1 = plt.subplots()
@@ -188,13 +218,14 @@ ax=plt.gca()
 
 # transform back to physical values (non-scaled)
 dudy_test_no_scale=scaler_dudy.inverse_transform(dudy_test)
-k_test_no_scale=scaler_k.inverse_transform(k_test)
+# k_test_no_scale=scaler_k.inverse_transform(k_test)
+vist_test_no_scale=scaler_vist.inverse_transform(vist_test)
 
 # plot color surface
-ax_plot=plt.pcolormesh(xx_no_scale,yy_no_scale, cmu_predict_xx_yy, vmin=0.6,vmax=1,cmap=plt.get_cmap('hot'),shading='gouraud')
+ax_plot=plt.pcolormesh(xx_no_scale,yy_no_scale, uv_predict_xx_yy, vmin=0.6,vmax=1,cmap=plt.get_cmap('hot'),shading='gouraud')
 
 # scatter plot of predicted cmu
-plt.scatter(dudy_test_no_scale.flatten(),k_test_no_scale.flatten(),marker='o',s=10,c='black')
+plt.scatter(dudy_test_no_scale.flatten(),vist_test_no_scale.flatten(),marker='o',s=10,c='black')
 
 plt.axis([0,125,2,5])
 
@@ -213,8 +244,8 @@ clb.ax.set_title(r'$C_\mu$',fontsize=11)
 ########################################## Cmu 
 fig1,ax1 = plt.subplots()
 plt.subplots_adjust(left=0.2,bottom=0.20)
-plt.plot(yplus_DNS_test,cmu_predict,'bo',label='svr')
-plt.plot(yplus_DNS_test,cmu_test,'r+',label='DNS')
+plt.plot(yplus_DNS_test,uv_predict,'bo',label='svr')
+plt.plot(yplus_DNS_test,uv_test,'r+',label='DNS')
 plt.legend(loc="best",fontsize=18)
 plt.ylabel(r"$C_\mu$")
 plt.xlabel("$y^+$")

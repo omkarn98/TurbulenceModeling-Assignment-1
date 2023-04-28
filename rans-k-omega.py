@@ -30,7 +30,7 @@ folder = './'
 filename = str(folder)+'model-svr.bin'
 model = load(str(folder)+'model-svr.bin')
 scaler_dudy = load(str(folder)+'scalar-dudy-svr.bin')
-# dudy_max, dudy_min = np.loadtxt(str(folder)+ 'min-max-svr.txt')
+dudy_max, dudy_min = np.loadtxt(str(folder)+ 'min-max-svr.txt')
 
 # max number of iterations
 niter=25000
@@ -276,6 +276,41 @@ for n in range(1,niter):
 
     om_iter[n]=om[jmon]
 
+
+# dudy_min_number = np.zeros([nj]) 
+# dudy_max_number = np.zeros([nj])
+# N = np.zeros([nj])
+# y_svr = np.zeros([nj])
+
+# if n > 1000:
+#    for i in range(1, nj-1):
+      
+#  #flatten
+# dudy= dudy.flatten()
+
+# #count values larger/smaller than max/min
+# dudy_min_number = (dudy < dudy_min)
+# dudy_max_number = (dudy > dudy_max)
+
+# #set limits
+# dudy = np.minimum(dudy, dudy_max)
+# dudy = np.maximum(dudy, dudy_min)
+
+# #size
+# N = len(dudy)
+
+# #re-sclae
+# dudy = dudy.reshape(-1,1)
+# dudy = scaler_dudy.transform(dudy)
+
+# #predict
+# X = np.zeros((N,1))
+# X[:,0] = dudy[:,0]
+
+# #compute dudy
+# y_svr = model.predict(X)
+
+
 # compute shear stress
 uv=-vist*dudy
 
@@ -293,13 +328,92 @@ uv_DNS=DNS_stress[:,5];
 
 k_DNS=0.5*(u2_DNS+v2_DNS+w2_DNS)
 
+ustar=tau_w[ntot]**0.5
+yplus = yp*ustar/viscos
+uplus=u/ustar
 
+#ML Training and prediction 
+
+#flatten 
+# dudy = dudy.flatten()
+
+#count values larger/smaller than max/min
+dudy_min_number = np.where(dudy < dudy_min)
+dudy_test = np.delete(dudy, dudy_min_number[0])
+dudy_max_number = np.where(dudy > dudy_max)
+dudy_test = np.delete(dudy, dudy_max_number[0])
+
+# print('dudy_min_number', dudy_min_number)
+# print('dudy_max_number', dudy_max_number)
+
+#set limits
+dudy_test = np.minimum(dudy, dudy_max)
+dudy_test = np.maximum(dudy, dudy_min)
+
+#size
+N = len(dudy_test)
+
+# re-shape
+dudy_test=dudy_test.reshape(-1, 1)
+
+# scale input data 
+scaler_dudy=StandardScaler()
+dudy_test=scaler_dudy.fit_transform(dudy_test)
+
+# setup X (input) and y (output)
+X=np.zeros((N,1))
+X[:,0]=dudy_test[:,0]
+
+print('starting SVR')
+
+# choose Machine Learning model
+C=1
+eps=0.001
+# use Linear model
+# model = LinearSVR(epsilon = eps , C = C, max_iter=1000)
+model = SVR(kernel='rbf', epsilon = eps, C = C)
+
+# Fit the model
+svr = model.fit(X, y.flatten())
+
+#  re-shape test data
+dudy_test=dudy_test.reshape(-1, 1)
+
+# scale test data
+dudy_test=scaler_dudy.transform(dudy_test)
+
+# setup X (input) for testing (predicting)
+X_test=np.zeros((N,1))
+X_test[:,0]=dudy_test[:,0]
+
+# predict cmu
+cmu_predict= model.predict(X_test)
+
+# find difference between ML prediction and target
+cmu_error=np.std(cmu_predict-cmu)/\
+(np.mean(cmu_predict**2))**0.5
+print('\nRMS error using ML turbulence model',cmu_error)
+
+yplus_ML = yplus
+yplus_ML = np.delete(yplus_ML, dudy_min_number[0])
+yplus_ML = np.delete(yplus_ML, dudy_max_number[0])
+
+vist_ML = vist
+vist_ML = np.delete(vist_ML, dudy_min_number[0])
+vist_ML = np.delete(vist_ML, dudy_max_number[0])
+
+k_ML = k
+k_ML = np.delete(k_ML, dudy_min_number[0])
+k_ML = np.delete(k_ML, dudy_max_number[0])
+
+u_ML = (vist_ML * k_ML * omega * cmu_predict) ** (1/4)
 
 # plot u
 fig1,ax1 = plt.subplots()
 plt.subplots_adjust(left=0.20,bottom=0.20)
 plt.plot(u,yp,'b-',label="CFD")
 plt.plot(u_DNS,y_DNS,'r-',label="DNS")
+plt.plot(u_ML,yp,'g-',label="ML")
 plt.ylabel("$U^+$")
 plt.xlabel("$y^+$")
 plt.legend(loc="best",prop=dict(size=18))
@@ -308,11 +422,10 @@ plt.legend(loc="best",prop=dict(size=18))
 # plot u log-scale
 fig1,ax1 = plt.subplots()
 plt.subplots_adjust(left=0.20,bottom=0.20)
-ustar=tau_w[ntot]**0.5
-yplus=yp*ustar/viscos
-uplus=u/ustar
+
 plt.semilogx(yplus,uplus,'b-',label="CFD")
 plt.semilogx(yplus_DNS,u_DNS,'r-',label="DNS")
+plt.semilogx(yplus_ML,u_ML,'g-',label="ML")
 plt.ylabel("$U^+$")
 plt.xlabel("$y^+$")
 plt.axis([1, 5200, 0, 28])
@@ -324,6 +437,7 @@ fig1,ax1 = plt.subplots()
 plt.subplots_adjust(left=0.20,bottom=0.20)
 plt.plot(k,yp,'b-',label="CFD")
 plt.plot(k_DNS,y_DNS,'r-',label="DNS")
+plt.plot(k_ML,yp,'g-',label="ML")
 plt.legend(loc="best",prop=dict(size=18))
 plt.xlabel('k')
 plt.ylabel('y')
@@ -371,4 +485,6 @@ data[:,6]=yc
 np.savetxt('yp_u_k_om_vist_uv_yc_PDH_5200.dat', data)
 
 
+
 plt.show(block = 'True')
+

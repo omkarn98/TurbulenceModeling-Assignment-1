@@ -325,7 +325,7 @@ Vt_22 = nu * (dvvdx_2 + dvvdy_2)
 Vt_12 = nu * (duvdx_2 + duvdy_2)
 
 #Pressure-strain terms
-phi_11_1 = -c1 * rho * (eps_RANS2d / k_RANS2d) * 
+phi_11_1 = -c1 * rho * (eps_RANS2d / k_RANS2d) 
 
 #Dissipation term 
 eps_11 = 2*eps_RANS2d / 3
