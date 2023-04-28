@@ -339,9 +339,9 @@ uplus=u/ustar
 
 #count values larger/smaller than max/min
 dudy_min_number = np.where(dudy < dudy_min)
-dudy_test = np.delete(dudy, dudy_min_number[0])
+# dudy_test = np.delete(dudy, dudy_min_number[0])
 dudy_max_number = np.where(dudy > dudy_max)
-dudy_test = np.delete(dudy, dudy_max_number[0])
+# dudy_test = np.delete(dudy, dudy_max_number[0])
 
 # print('dudy_min_number', dudy_min_number)
 # print('dudy_max_number', dudy_max_number)
@@ -362,25 +362,24 @@ dudy_test=scaler_dudy.fit_transform(dudy_test)
 
 # setup X (input) and y (output)
 X=np.zeros((N,1))
+y = cmu
 X[:,0]=dudy_test[:,0]
 
 print('starting SVR')
 
 # choose Machine Learning model
-C=1
-eps=0.001
-# use Linear model
-# model = LinearSVR(epsilon = eps , C = C, max_iter=1000)
-model = SVR(kernel='rbf', epsilon = eps, C = C)
+# C=1
+# eps=0.001
+# # use Linear model
+# # model = LinearSVR(epsilon = eps , C = C, max_iter=1000)
+# model = SVR(kernel='rbf', epsilon = eps, C = C)
 
 # Fit the model
-svr = model.fit(X, y.flatten())
+# svr = model.fit(X, y.flatten())
 
 #  re-shape test data
 dudy_test=dudy_test.reshape(-1, 1)
 
-# scale test data
-dudy_test=scaler_dudy.transform(dudy_test)
 
 # setup X (input) for testing (predicting)
 X_test=np.zeros((N,1))
@@ -395,16 +394,8 @@ cmu_error=np.std(cmu_predict-cmu)/\
 print('\nRMS error using ML turbulence model',cmu_error)
 
 yplus_ML = yplus
-yplus_ML = np.delete(yplus_ML, dudy_min_number[0])
-yplus_ML = np.delete(yplus_ML, dudy_max_number[0])
-
 vist_ML = vist
-vist_ML = np.delete(vist_ML, dudy_min_number[0])
-vist_ML = np.delete(vist_ML, dudy_max_number[0])
-
 k_ML = k
-k_ML = np.delete(k_ML, dudy_min_number[0])
-k_ML = np.delete(k_ML, dudy_max_number[0])
 
 u_ML = (vist_ML * k_ML * omega * cmu_predict) ** (1/4)
 
@@ -414,6 +405,7 @@ plt.subplots_adjust(left=0.20,bottom=0.20)
 plt.plot(u,yp,'b-',label="CFD")
 plt.plot(u_DNS,y_DNS,'r-',label="DNS")
 plt.plot(u_ML,yp,'g-',label="ML")
+
 plt.ylabel("$U^+$")
 plt.xlabel("$y^+$")
 plt.legend(loc="best",prop=dict(size=18))
@@ -444,33 +436,33 @@ plt.ylabel('y')
 # plt.savefig('k_5200.png')
 
 # plot tau_w versus iteration number
-fig1,ax1 = plt.subplots()
-plt.subplots_adjust(left=0.20,bottom=0.20)
-plt.plot(tau_w[0:ntot],'b-')
-#plt.plot(tau_w[0:ntot],'b-')
-plt.title('wall shear stress')
-plt.xlabel('Iteration number')
-plt.ylabel('tauw')
+# fig1,ax1 = plt.subplots()
+# plt.subplots_adjust(left=0.20,bottom=0.20)
+# plt.plot(tau_w[0:ntot],'b-')
+# #plt.plot(tau_w[0:ntot],'b-')
+# plt.title('wall shear stress')
+# plt.xlabel('Iteration number')
+# plt.ylabel('tauw')
 # plt.savefig('tauw.png')
 
 # plot k(jmon) versus iteration number
-fig1,ax1 = plt.subplots()
-plt.subplots_adjust(left=0.20,bottom=0.20)
-plt.plot(k_iter[0:ntot],'b-')
-#plt.plot(k_iter[0:ntot],'b-')
-plt.title('k in node jmon')
-plt.xlabel('Iteration number')
-plt.ylabel('k')
+# fig1,ax1 = plt.subplots()
+# plt.subplots_adjust(left=0.20,bottom=0.20)
+# plt.plot(k_iter[0:ntot],'b-')
+# #plt.plot(k_iter[0:ntot],'b-')
+# plt.title('k in node jmon')
+# plt.xlabel('Iteration number')
+# plt.ylabel('k')
 # plt.savefig('k_iter.png')
 
 # plot om(jmon) versus iteration number
-fig1,ax1 = plt.subplots()
-plt.subplots_adjust(left=0.20,bottom=0.20)
-plt.plot(om_iter[0:ntot],'b-')
-#plt.plot(om_iter[0:ntot],'b-')
-plt.title('omega in node jmon')
-plt.xlabel('Iteration number')
-plt.ylabel('omega')
+# fig1,ax1 = plt.subplots()
+# plt.subplots_adjust(left=0.20,bottom=0.20)
+# plt.plot(om_iter[0:ntot],'b-')
+# #plt.plot(om_iter[0:ntot],'b-')
+# plt.title('omega in node jmon')
+# plt.xlabel('Iteration number')
+# plt.ylabel('omega')
 # plt.savefig('om_iter.png')
 
 # save data
