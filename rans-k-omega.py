@@ -338,10 +338,8 @@ uplus=u/ustar
 # dudy = dudy.flatten()
 
 #count values larger/smaller than max/min
-dudy_min_number = np.where(dudy < dudy_min)
-# dudy_test = np.delete(dudy, dudy_min_number[0])
-dudy_max_number = np.where(dudy > dudy_max)
-# dudy_test = np.delete(dudy, dudy_max_number[0])
+dudy_min_number = (dudy < dudy_min)
+dudy_max_number = (dudy > dudy_max)
 
 # print('dudy_min_number', dudy_min_number)
 # print('dudy_max_number', dudy_max_number)
