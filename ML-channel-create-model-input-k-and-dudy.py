@@ -68,26 +68,26 @@ dudy_max = np.max(dudy_DNS)
 vist_min = np.min(vist_DNS)
 vist_max = np.max(vist_DNS)
 
-# cmu_all_data=cmu_DNS
+cmu_all_data=cmu_DNS
 uv_all_data=uv_DNS
 yplus_DNS_all_data=yplus_DNS
+
 # input dudy
 dudy_all_data=dudy_DNS
+vist_all_data=vist_DNS
 
 # input k
 # k_all_data=k_DNS
 
-# input vist
-vist_all_data=vist_DNS
 
 # create new indices for all data (which goes from 0 to len(uv_all_data)
-index= np.arange(0,len(uv_all_data), dtype=int)
+index= np.arange(0,len(cmu_all_data), dtype=int)
 
 # number of elements of test data, 20%
-n_test=int(0.2*len(uv_all_data))
+n_test=int(0.2*len(cmu_all_data))
 
 # the rest is for training data
-n_svr=len(uv_all_data)-n_test
+n_svr=len(cmu_all_data)-n_test
 
 # pick 20% elements randomly (test data)
 index_test=np.random.choice(index, size=n_test, replace=False)
@@ -97,8 +97,9 @@ dudy_test=dudy_all_data[index_test]
 # k_test=k_all_data[index_test]
 vist_test=vist_all_data[index_test]
 yplus_DNS_test=yplus_DNS_all_data[index_test]
-# cmu_test=cmu_all_data[index_test]
+cmu_test=cmu_all_data[index_test]
 uv_test=uv_all_data[index_test]
+
 n_test=len(dudy_test)
 print('n_test',n_test)
 
@@ -106,9 +107,9 @@ print('n_test',n_test)
 dudy_in=np.delete(dudy_all_data,index_test)
 # k_in=np.delete(k_all_data,index_test)
 vist_in=np.delete(vist_all_data,index_test)
-
-# cmu_out=np.delete(cmu_all_data,index_test)
+cmu_out=np.delete(cmu_all_data,index_test)
 uv_out=np.delete(uv_all_data,index_test)
+
 n_svr=len(uv_out)
 
 # re-shape
@@ -158,7 +159,7 @@ X_test[:,0]=dudy_test[:,0]
 X_test[:,1]=vist_test[:,0]
 
 # predict uv
-# cmu_predict= model.predict(X_test)
+cmu_predict= model.predict(X_test)
 uv_predict= model.predict(X_test)
 
 # find difference between ML prediction and target
@@ -181,65 +182,65 @@ plt.axis([0, 5200, -1, 0])
 # plt.savefig('uv_DNS.png',bbox_inches='tight')
 
 
-# Set Increments between points in a meshgrid
-mesh_size = 0.05
+# # Set Increments between points in a meshgrid
+# mesh_size = 0.05
 
-# Find the parameter space
-# Identify min and max values for input variables
-x_min, x_max = X[:,0].min(), X[:,0].max()
-y_min, y_max = X[:,1].min(), X[:,1].max()
+# # Find the parameter space
+# # Identify min and max values for input variables
+# x_min, x_max = X[:,0].min(), X[:,0].max()
+# y_min, y_max = X[:,1].min(), X[:,1].max()
 
-# Return evenly spaced values based on a range between min and max
-xrange = np.arange(x_min, x_max, mesh_size)
-yrange = np.arange(y_min, y_max, mesh_size)
+# # Return evenly spaced values based on a range between min and max
+# xrange = np.arange(x_min, x_max, mesh_size)
+# yrange = np.arange(y_min, y_max, mesh_size)
 
-# Create a meshgrid
-xx, yy= np.meshgrid(xrange, yrange)
+# # Create a meshgrid
+# xx, yy= np.meshgrid(xrange, yrange)
 
 # Use model to create a prediction plane --- SVR
 # cmu_predict_xx_yy = model.predict(np.c_[xx.ravel(), yy.ravel()])
 # cmu_predict_xx_yy = cmu_predict_xx_yy.reshape(xx.shape)
 
-uv_predict_xx_yy = model.predict(np.c_[xx.ravel(), yy.ravel()])
-uv_predict_xx_yy = uv_predict_xx_yy.reshape(xx.shape)
+# uv_predict_xx_yy = model.predict(np.c_[xx.ravel(), yy.ravel()])
+# uv_predict_xx_yy = uv_predict_xx_yy.reshape(xx.shape)
 
 
-# transform back to physical values (non-scaled)
+# # transform back to physical values (non-scaled)
+# # xx_no_scale=scaler_dudy.inverse_transform(xx)
+# # yy_no_scale=scaler_k.inverse_transform(yy)
+
 # xx_no_scale=scaler_dudy.inverse_transform(xx)
-# yy_no_scale=scaler_k.inverse_transform(yy)
-
-xx_no_scale=scaler_dudy.inverse_transform(xx)
-yy_no_scale=scaler_vist.inverse_transform(yy)
+# yy_no_scale=scaler_vist.inverse_transform(yy)
 
 ####################################### cmu  2D scatter
-fig1,ax1 = plt.subplots()
-plt.subplots_adjust(left=0.20,bottom=0.20)
-ax=plt.gca()
+# fig1,ax1 = plt.subplots()
+# plt.subplots_adjust(left=0.20,bottom=0.20)
+# ax=plt.gca()
 
-# transform back to physical values (non-scaled)
-dudy_test_no_scale=scaler_dudy.inverse_transform(dudy_test)
-# k_test_no_scale=scaler_k.inverse_transform(k_test)
-vist_test_no_scale=scaler_vist.inverse_transform(vist_test)
+# # transform back to physical values (non-scaled)
+# dudy_test_no_scale=scaler_dudy.inverse_transform(dudy_test)
+# # k_test_no_scale=scaler_k.inverse_transform(k_test)
+# vist_test_no_scale=scaler_vist.inverse_transform(vist_test)
 
-# plot color surface
-ax_plot=plt.pcolormesh(xx_no_scale,yy_no_scale, uv_predict_xx_yy, vmin=0.6,vmax=1,cmap=plt.get_cmap('hot'),shading='gouraud')
+# # plot color surface
+# ax_plot=plt.pcolormesh(xx_no_scale,yy_no_scale, uv_predict_xx_yy, vmin=0.6,vmax=1,cmap=plt.get_cmap('hot'),shading='gouraud')
 
-# scatter plot of predicted cmu
-plt.scatter(dudy_test_no_scale.flatten(),vist_test_no_scale.flatten(),marker='o',s=10,c='black')
+# # scatter plot of predicted cmu
+# plt.scatter(dudy_test_no_scale.flatten(),vist_test_no_scale.flatten(),marker='o',s=10,c='black')
 
-plt.axis([0,125,2,5])
+# plt.axis([0,125,2,5])
 
-#label axes
-plt.xlabel(r'$\frac{\partial \bar{U}}{\partial y}$')
-plt.ylabel(r'$k$')
+# #label axes
+# plt.xlabel(r'$\frac{\partial \bar{U}}{\partial y}$')
+# plt.ylabel(r'$k$')
 
-# put horizontal colorbar at the top 
-cbaxes = fig1.add_axes([0.35, 0.93, 0.33, 0.02])  # x_start, y_start, x_width, y_width [0--1]
-clb=plt.colorbar(ax_plot,cax=cbaxes,orientation='horizontal')
-clb.ax.tick_params(labelsize=11)
-clb.ax.set_title(r'$C_\mu$',fontsize=11)
+# # put horizontal colorbar at the top 
+# cbaxes = fig1.add_axes([0.35, 0.93, 0.33, 0.02])  # x_start, y_start, x_width, y_width [0--1]
+# clb=plt.colorbar(ax_plot,cax=cbaxes,orientation='horizontal')
+# clb.ax.tick_params(labelsize=11)
+# clb.ax.set_title(r'$C_\mu$',fontsize=11)
 
-# plt.savefig('2D-scatter-dudy-and-k-vs-uv-svr-and-test.png',bbox_inches='tight')
+# # plt.savefig('2D-scatter-dudy-and-k-vs-uv-svr-and-test.png',bbox_inches='tight')
 
 ########################################## Cmu 
 fig1,ax1 = plt.subplots()
@@ -247,11 +248,25 @@ plt.subplots_adjust(left=0.2,bottom=0.20)
 plt.plot(yplus_DNS_test,uv_predict,'bo',label='svr')
 plt.plot(yplus_DNS_test,uv_test,'r+',label='DNS')
 plt.legend(loc="best",fontsize=18)
-plt.ylabel(r"$C_\mu$")
+plt.ylabel(r"$\overline{u'v'}$")
 plt.xlabel("$y^+$")
 plt.axis([100, 2000, 0.6, 1.1])
+
+# fig1,ax1 = plt.subplots()
+# # plt.subplots_adjust(left=0.2,bottom=0.20)
+# plt.plot(yplus_DNS_test,cmu_predict,'bo',label='svr')
+# plt.plot(yplus_DNS_test,cmu_test,'r+',label='DNS')
+# plt.legend(loc="best",fontsize=18)
+# plt.ylabel(r"$C_\mu$")
+# plt.xlabel("$y^+$")
+
 plt.show(block = 'True')
 
+dump(model,'model-vistnd-svr.bin')
+dump(scaler_vist,'scaler-vist-svr.bin')
+dump(scaler_dudy,'scaler-dudy-svr.bin')
+np.savetxt('min-max-dudy-svr.txt',[dudy_min,dudy_max])
+np.savetxt('min-max-vist-svr.txt',[vist_min,vist_max])
 
 # plt.savefig('cmu.png',bbox_inches='tight')
 
