@@ -334,15 +334,9 @@ uplus=u/ustar
 
 #ML Training and prediction 
 
-#flatten 
-# dudy = dudy.flatten()
-
 #count values larger/smaller than max/min
 dudy_min_number = (dudy < dudy_min)
 dudy_max_number = (dudy > dudy_max)
-
-# print('dudy_min_number', dudy_min_number)
-# print('dudy_max_number', dudy_max_number)
 
 #set limits
 dudy_test = np.minimum(dudy, dudy_max)
@@ -363,17 +357,6 @@ X=np.zeros((N,1))
 y = cmu
 X[:,0]=dudy_test[:,0]
 
-print('starting SVR')
-
-# choose Machine Learning model
-# C=1
-# eps=0.001
-# # use Linear model
-# # model = LinearSVR(epsilon = eps , C = C, max_iter=1000)
-# model = SVR(kernel='rbf', epsilon = eps, C = C)
-
-# Fit the model
-# svr = model.fit(X, y.flatten())
 
 #  re-shape test data
 dudy_test=dudy_test.reshape(-1, 1)
@@ -404,8 +387,8 @@ plt.plot(u,yp,'b-',label="CFD")
 plt.plot(u_DNS,y_DNS,'r-',label="DNS")
 plt.plot(u_ML,yp,'g-',label="ML")
 
-plt.ylabel("$U^+$")
-plt.xlabel("$y^+$")
+plt.ylabel("y")
+plt.xlabel("$U$")
 plt.legend(loc="best",prop=dict(size=18))
 # plt.savefig('u_5200.png')
 
@@ -428,10 +411,13 @@ plt.subplots_adjust(left=0.20,bottom=0.20)
 plt.plot(k,yp,'b-',label="CFD")
 plt.plot(k_DNS,y_DNS,'r-',label="DNS")
 plt.plot(k_ML,yp,'g-',label="ML")
+# plt.plot(cmu,y_DNS,'r-',label="DNS")
+# plt.plot(cmu_predict,yp,'g-',label="ML")
 plt.legend(loc="best",prop=dict(size=18))
 plt.xlabel('k')
 plt.ylabel('y')
 # plt.savefig('k_5200.png')
+
 
 # plot tau_w versus iteration number
 # fig1,ax1 = plt.subplots()
