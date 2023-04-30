@@ -48,7 +48,7 @@ dudy_DNS_org=dudy_DNS
 k_DNS_org=k_DNS
 # Input data: dudy
 # choose` DNS data for yplus > 100 and < 2000
-index=np.nonzero((yplus_DNS > 100 )  & (yplus_DNS< 2000 ))
+index=np.nonzero((yplus_DNS > 30 )  & (yplus_DNS< 1500 ))
 index_org=index
 yplus_DNS=yplus_DNS[index]
 dudy_DNS=dudy_DNS[index]
@@ -136,7 +136,7 @@ print('starting SVR')
 # choose Machine Learning model
 C=10
 #C=1000
-eps=0.001
+eps=0.0001
 model = SVR(kernel='rbf', epsilon = eps, C = C)
 
 # Fit the model
