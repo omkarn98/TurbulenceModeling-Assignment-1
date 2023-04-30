@@ -325,11 +325,85 @@ Vt_22 = nu * (dvvdx_2 + dvvdy_2)
 Vt_12 = nu * (duvdx_2 + duvdy_2)
 
 #Pressure-strain terms
-phi_11_1 = -c1 * rho * (eps_RANS2d / k_RANS2d) 
+phi_11_1 = -c1 * rho * np.multiply(np.divide(eps_RANS2d, k_RANS2d), uu2d - 2*k_RANS2d/3)
+phi_12_1 = -c1 * rho * np.multiply(np.divide(eps_RANS2d, k_RANS2d), uv2d)
+phi_11_2 = -c2 * rho * (P_11 -2 * p_k/3)
+phi_12_2 = -c2 * rho * P_12
+phi_22_2 = -c2 * rho * (P_22 -2 * p_k/3)
+
+walldistance = np.zeros((ni,nj))
+walldistN = np.zeros((ni,1))
+walldistS = np.zeros((ni,1))
+
+n1n = np.zeros((ni,1))
+n1s = np.zeros((ni,1))
+n2n = np.zeros((ni,1))
+n2s = np.zeros((ni,1))
+
+X_n = np.zeros((ni,1))
+X_s = np.zeros((ni,1))
+
+Y_n = np.zeros((ni,1))
+Y_s = np.zeros((ni,1))
+
+f = np.zeros((ni, nj))
+N_1 = np.zeros((ni, nj))
+N_2 = np.zeros((ni, nj))
+
+for i in range(ni):
+   dist_n = np.sqrt((x2d[i+1, -1] - x2d[i, -1])*2 + (y2d[i+1, -1] - y2d[i, -1])*2)
+   dist_s = np.sqrt((x2d[i+1, 0] - x2d[i, 0])*2 + (y2d[i+1, 0] - y2d[i, 0])*2)
+
+   c1n = (x2d[i+1, -1] - x2d[i, -1]) / dist_n
+   c1s = (x2d[i+1, 0] - x2d[i, 0]) / dist_n
+   c2n = (y2d[i+1, -1] - y2d[i, -1]) / dist_s
+   c2s = (y2d[i+1, 0] - y2d[i, 0]) / dist_s
+   n1n[i] = c2n
+   n1s[i] = -c2s
+   n2n[i] = -c1n
+   n2s[i] = c1s
+
+   X_n[i] = (x2d[i+1, -1] + x2d[i, -1]) / 2
+   X_s[i] = (x2d[i+1, 0] + x2d[i, 0]) / 2
+   Y_n[i] = (y2d[i+1, -1] + y2d[i, -1]) / 2
+   Y_s[i] = (y2d[i+1, 0] + y2d[i, 0]) / 2
+
+   eq = np.zeros((ni, nj))
+
+for i in range(ni):
+   for j in range(nj):
+      walldistN = np.sqrt((xp2d[i,j] - X_n)**2 + (yp2d[i,j] - Y_n)**2)
+      walldistS = np.sqrt((xp2d[i,j] - X_s)**2 + (yp2d[i,j] - Y_s)**2)
+      walldistN_min = np.amin(walldistN)
+      walldistS_min = np.amin(walldistS)
+
+      walldistance[i,j] = np.minimum(walldistN_min, walldistS_min)
+
+      if walldistN_min < walldistS_min :
+         N_1[i,j] = n1n[i]
+         N_2[i,j] = n2n[i]
+      else:
+         N_1[i,j] = n1s[i]
+         N_2[i,j] = n2s[i]
+      
+      eq[i,j] = k_RANS2d[i,j] ** (3/2) / 2.55 * walldistance[i,j] * eps_RANS2d[i,j]   
+      f[i,j] = np.minimum(eq[i,j], 1)
+
+N_11 = N_1 * N_1
+N_22 = N_2 * N_2
+N_12 = N_1 * N_2
+
+phi_11_1wall = c1_w * ((eps_RANS2d / k_RANS2d) * (-2 * (uu2d * N_11) - (uv2d * N_12) + (vv2d * N_22))) * f
+phi_12_1wall = c1_w * ((eps_RANS2d / k_RANS2d) * (-1.5 * (uu2d * N_12) + (uv2d * N_22) + (uv2d * N_11) + (vv2d * N_12))) * f
+phi_11_2wall = c2_w * f * ((-2 * phi_11_2 * N_11) - (phi_12_2 * N_12) + (phi_22_2 * N_22))
+phi_12_2wall = c2_w * f * (1.5 *( (phi_11_2 * N_12) + (phi_12_2 * N_22) + (phi_12_2 * N_11) + (phi_22_2 * N_12)))
+
+phi_11 = phi_11_1 + phi_11_2 + phi_11_1wall + phi_11_2wall
+phi_12 = phi_12_1 + phi_12_2 + phi_12_1wall + phi_12_2wall
 
 #Dissipation term 
 eps_11 = 2*eps_RANS2d / 3
-#eps_12 = 0 because kornicker delta is 0
+eps_12 = np.zeros((ni,nj))   #because kornicker delta is 0
 
 #Diffusion term
 vist = c_mu * k_RANS2d**2 / eps_RANS2d
@@ -526,6 +600,36 @@ plt.xlabel("$x$")
 plt.ylabel("$y$")
 plt.title("Production Term")
 
+plt.figure()
+i = 55
+plt.plot(production_k12[i,:], yp2d[i,:], 'r-.')
+plt.plot(eps_RANS2d[i,:], yp2d[i,:], 'b-.')
+plt.legend((r'$P_k$ at i = 55', r'$\epsilon RANS$ at i = 55'))
+plt.ylabel('y/H')
+
+# plot 1.5 
+i = 35
+plt.figure()
+plt.plot(Vt_11[i,:], yp2d[i,:], 'r-.')
+plt.plot(P_11[i,:], yp2d[i,:], 'b-.')
+plt.plot(phi_11[i,:], yp2d[i,:], 'k-.')
+plt.plot(D11[i,:], yp2d[i,:], 'g-.')
+plt.plot(eps_11[i,:], yp2d[i,:], 'c-.')
+plt.ylabel('y/H')
+plt.xlabel('At x = 35')
+# plt.xlabel('Production Term')
+plt.legend((r'$\mu_t$', r'$P_{11}$', r'$\phi_{11}$', r'$D_{11}$', r'$\epsilon_{11}$'))
+
+plt.figure()
+plt.plot(Vt_12[i,:], yp2d[i,:], 'r-.')
+plt.plot(P_12[i,:], yp2d[i,:], 'b-.')
+plt.plot(phi_12[i,:], yp2d[i,:], 'k-.')
+plt.plot(D12[i,:], yp2d[i,:], 'g-.')
+plt.plot(eps_12[i,:], yp2d[i,:], 'c-.')
+plt.ylabel('y/H')
+plt.xlabel('At x = 35')
+# plt.xlabel('Production Term')
+plt.legend((r'$\mu_t$', r'$P_{12}$', r'$\phi_{12}$', r'$D_{12}$', r'$\epsilon_{12}$'))
 
 plt.show(block = 'True')
 
